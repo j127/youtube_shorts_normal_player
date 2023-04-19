@@ -5,10 +5,12 @@ browser.webRequest.onBeforeRequest.addListener(
         if (!url.pathname.startsWith("/shorts/")) return;
 
         const videoID = url.pathname.split("/shorts/")[1];
-        url.searchParams.append("v", videoID);
+
         const newURL = new URL(url.origin);
-        newURL.search = url.searchParams.toString();
+        newURL.searchParams = url.searchParams;
+        newURL.searchParams.append("v", videoID);
         newURL.pathname = "/watch";
+
         const redirectUrl = newURL.toString();
 
         return {
