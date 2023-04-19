@@ -1,0 +1,15 @@
+.swc/
+.netlify/
+_site/
+dist/
+build/
+.git/
+node_modules/
+__pycache__/
+.vim/
+.vscode/
+.idea/
+pg/
+.cache/
+.parcel-cache/
+.mypy_cache/
