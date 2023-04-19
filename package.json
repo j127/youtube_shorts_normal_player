@@ -5,7 +5,7 @@
     "scripts": {
         "dev": "web-ext run",
         "dev:mobile": "web-ext run --target=firefox-android",
-        "build": "web-ext build"
+        "build": "web-ext build -i TANK .gitignore .prettierignore .prettierrc .editorconfig yarn.lock package.json"
     },
     "devDependencies": {
         "web-ext": "^7.6.1"
