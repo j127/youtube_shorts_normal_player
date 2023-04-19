@@ -1,0 +1,13 @@
+{
+    "name": "youtube_shorts_normal_player",
+    "version": "1.0.0",
+    "license": "MIT",
+    "scripts": {
+        "dev": "web-ext run",
+        "dev:mobile": "web-ext run --target=firefox-android",
+        "build": "web-ext build"
+    },
+    "devDependencies": {
+        "web-ext": "^7.6.1"
+    }
+}
