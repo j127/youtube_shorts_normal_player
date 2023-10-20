@@ -7,8 +7,10 @@
         "48": "images/icon.svg",
         "128": "images/icon.svg"
     },
-    "background": {
-        "scripts": ["background.js"]
-    },
-    "permissions": ["webRequest", "webRequestBlocking", "*://*.youtube.com/*"]
+    "content_scripts": [
+        {
+            "matches": ["*://*.youtube.com/*"],
+            "js": ["main.js"]
+        }
+    ]
 }
