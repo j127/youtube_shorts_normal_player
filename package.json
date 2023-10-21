@@ -4,6 +4,7 @@
     "license": "MIT",
     "scripts": {
         "dev": "web-ext run",
+        "chrome": "web-ext run -t chromium",
         "dev:mobile": "web-ext run --target=firefox-android",
         "build": "web-ext build -i TANK .gitignore .prettierignore .prettierrc .editorconfig yarn.lock package.json"
     },
