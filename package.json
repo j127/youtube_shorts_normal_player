@@ -9,7 +9,8 @@
         "dev:mobile": "web-ext run --target=firefox-android",
         "build:firefox": "web-ext build --source-dir _build/firefox --artifacts-dir _build/firefox/artifacts",
         "build:chrome": "web-ext build --source-dir _build/chrome --artifacts-dir _build/chrome/artifacts",
-        "build": "./scripts/build.sh"
+        "build": "./scripts/build.sh",
+        "version_update": "bun ./scripts/version.ts"
     },
     "devDependencies": {
         "web-ext": "^7.6.1"
