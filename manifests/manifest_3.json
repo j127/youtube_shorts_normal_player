@@ -13,11 +13,5 @@
             "matches": ["*://*.youtube.com/*"],
             "js": ["main.js"]
         }
-    ],
-    "browser_specific_settings": {
-        "gecko": {
-            "id": "{1585f20b-4ee0-4f94-b48a-3719b091df78}",
-            "strict_min_version": "109.0"
-        }
-    }
+    ]
 }
