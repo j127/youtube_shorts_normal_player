@@ -1,6 +1,6 @@
 {
     "name": "youtube_shorts_normal_player",
-    "version": "1.1.7",
+    "version": "1.1.8",
     "license": "MIT",
     "scripts": {
         "dev": "web-ext run",
