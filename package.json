@@ -1,6 +1,6 @@
 {
     "name": "youtube_shorts_normal_player",
-    "version": "1.2.0",
+    "version": "1.2.1",
     "license": "MIT",
     "scripts": {
         "clean": "rm -rf _build",
