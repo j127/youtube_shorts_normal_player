@@ -6,7 +6,8 @@ It is designed for Chrome and [Firefox](https://www.firefox.com/).
 
 Download pages:
 
-- [https://addons.mozilla.org/en-US/firefox/addon/youtube-shorts-normal-player/](https://addons.mozilla.org/en-US/firefox/addon/youtube-shorts-normal-player/).
+- [Firefox](https://addons.mozilla.org/en-US/firefox/addon/youtube-shorts-normal-player/).
+- [Chrome](https://chrome.google.com/webstore/detail/youtube-shorts-normal-pla/ojdpihjfiedojdckbmipjgoehcemgbio)
 
 The YouTube Shorts player is annoying becuase you can't rewind videos, among other problems. This browser extension will automatically redirect all YouTube Shorts video so that they play in the normal YouTube player. That will allow you to rewind the videos and view them just like any normal YouTube video.
 
