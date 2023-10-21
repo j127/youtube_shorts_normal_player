@@ -14,5 +14,9 @@ function redirect(path) {
     const videoID = path.split("/shorts/")[1];
     newURL.searchParams.append("v", videoID);
     newURL.pathname = "/watch";
-    window.location.replace(newURL);
+
+    const destination = newURL.toString();
+    console.log("redirecting to", destination);
+
+    window.location.replace(destination);
 }
