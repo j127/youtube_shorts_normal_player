@@ -3,10 +3,13 @@
     "version": "1.1.8",
     "license": "MIT",
     "scripts": {
+        "clean": "rm -rf _build",
         "dev": "web-ext run",
         "dev:chrome": "web-ext run -t chromium",
         "dev:mobile": "web-ext run --target=firefox-android",
-        "build": "web-ext build -i TANK .gitignore .prettierignore .prettierrc .editorconfig yarn.lock package.json"
+        "build:firefox": "web-ext build --source-dir _build/firefox --artifacts-dir _build/firefox/artifacts",
+        "build:chrome": "web-ext build --source-dir _build/chrome --artifacts-dir _build/chrome/artifacts",
+        "build": "./scripts/build.sh"
     },
     "devDependencies": {
         "web-ext": "^7.6.1"
