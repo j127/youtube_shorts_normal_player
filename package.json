@@ -4,14 +4,14 @@
     "license": "MIT",
     "scripts": {
         "clean": "rm -rf _build",
-        "dev": "yarn build && web-ext run --source-dir _build/firefox",
+        "dev": "concurrently 'yarn dev:firefox' 'yarn dev:chrome'",
+        "dev:firefox": "yarn build && web-ext run --source-dir _build/firefox",
         "dev:chrome": "yarn build && web-ext run -t chromium --source-dir _build/chrome",
         "dev:mobile": "web-ext run --target=firefox-android",
-        "build:firefox": "web-ext build --source-dir _build/firefox --artifacts-dir _build/firefox/artifacts",
-        "build:chrome": "web-ext build --source-dir _build/chrome --artifacts-dir _build/chrome/artifacts",
         "build": "./scripts/build.sh"
     },
     "devDependencies": {
+        "concurrently": "^8.2.2",
         "web-ext": "^7.6.1"
     }
 }
