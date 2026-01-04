@@ -1,7 +1,7 @@
 {
     "manifest_version": 3,
     "name": "YouTube Shorts Normal Player",
-    "version": "1.2.2",
+    "version": "1.3.2",
     "description": "Plays YouTube Shorts in the normal YouTube player so you can rewind the videos.",
     "icons": { "48": "images/icon-48.png", "128": "images/icon-128.png" },
     "host_permissions": ["*://*.youtube.com/*"],
