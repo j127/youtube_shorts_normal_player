@@ -20,7 +20,7 @@ cp LICENSE _build/firefox
 cp LICENSE _build/chrome
 
 echo "Building Firefox version..."
-bun run web-ext build --source-dir _build/firefox --artifacts-dir _build/firefox/artifacts
+bunx web-ext build --source-dir _build/firefox --artifacts-dir _build/firefox/artifacts --overwrite-dest
 
 echo "Building Chrome version..."
-bun run web-ext build --source-dir _build/chrome --artifacts-dir _build/chrome/artifacts
+bunx web-ext build --source-dir _build/chrome --artifacts-dir _build/chrome/artifacts --overwrite-dest
