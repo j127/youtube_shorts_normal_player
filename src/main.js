@@ -10,7 +10,7 @@ function redirect(path) {
     if (!isShorts) return;
 
     const newURL = new URL(window.location);
-    const videoID = path.split("/shorts/")[1];
+    const videoID = path.split("/shorts/")[1]?.split(/[/?#]/)[0];
     newURL.searchParams.append("v", videoID);
     newURL.pathname = "/watch";
 
