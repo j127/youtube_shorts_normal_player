@@ -2,6 +2,8 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+Do not enter the `TANK/` directory.
+
 ## Project Overview
 
 This is a cross-browser extension that redirects YouTube Shorts URLs to the normal YouTube player. The extension supports both Firefox (Manifest v2) and Chrome/Chromium (Manifest v3).
@@ -31,13 +33,12 @@ The `build.sh` script:
 2. Copies `src/*` to `_build/firefox` and `_build/chrome`
 3. Copies browser-specific manifests from `manifests/` to each build directory as `manifest.json`
 4. Copies LICENSE to both build directories
-5. Runs `yarn build:firefox` and `yarn build:chrome` (legacy commands that may need updating)
+5. Runs build scripts.
 
 Build output structure:
 
 - `_build/firefox/` - Firefox extension (Manifest v2)
 - `_build/chrome/` - Chrome extension (Manifest v3)
-- `web-ext-artifacts/` - Packaged extension files
 
 ## Architecture
 

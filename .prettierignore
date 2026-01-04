@@ -13,3 +13,4 @@ pg/
 .cache/
 .parcel-cache/
 .mypy_cache/
+bun.lock

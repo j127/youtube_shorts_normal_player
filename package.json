@@ -4,21 +4,21 @@
     "license": "MIT",
     "scripts": {
         "clean": "rm -rf _build",
-        "dev": "concurrently 'yarn dev:firefox' 'yarn dev:chrome'",
-        "dev:firefox": "yarn build && web-ext run --source-dir _build/firefox",
-        "dev:chrome": "yarn build && web-ext run -t chromium --source-dir _build/chrome",
+        "dev": "bun run build && concurrently 'web-ext run --source-dir _build/firefox' 'web-ext run -t chromium --source-dir _build/chrome'",
+        "dev:firefox": "bun run build && web-ext run --source-dir _build/firefox",
+        "dev:chrome": "bun run build && web-ext run -t chromium --source-dir _build/chrome",
         "dev:mobile": "web-ext run --target=firefox-android",
         "build": "./scripts/build.sh",
         "format": "prettier --write '**/*.{md,mdx,ts,js,mjs,cjs,jsx,tsx,yaml,yml,json,html,css,scss,vue,astro}'"
     },
     "dependencies": {},
     "devDependencies": {
-        "concurrently": "^8.2.2",
-        "web-ext": "^7.6.1",
+        "@types/bun": "latest",
+        "concurrently": "^9.2.1",
         "prettier": "^3.7.4",
-        "@types/bun": "latest"
+        "web-ext": "^9.2.0"
     },
     "peerDependencies": {
-        "typescript": "^5"
+        "typescript": "^5.9.3"
     }
 }
