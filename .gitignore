@@ -1,3 +1,4 @@
+.claude/
 _build/
 **/node_modules/*
 .env
