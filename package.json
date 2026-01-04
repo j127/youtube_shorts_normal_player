@@ -8,10 +8,13 @@
         "dev:firefox": "yarn build && web-ext run --source-dir _build/firefox",
         "dev:chrome": "yarn build && web-ext run -t chromium --source-dir _build/chrome",
         "dev:mobile": "web-ext run --target=firefox-android",
-        "build": "./scripts/build.sh"
+        "build": "./scripts/build.sh",
+        "format": "prettier --write '**/*.{md,mdx,ts,js,mjs,cjs,jsx,tsx,yaml,yml,json,html,css,scss,vue,astro}'"
     },
     "devDependencies": {
         "concurrently": "^8.2.2",
-        "web-ext": "^7.6.1"
-    }
+        "web-ext": "^7.6.1",
+        "prettier": "^3.7.4"
+    },
+    "dependencies": {}
 }
