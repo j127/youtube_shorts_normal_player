@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+set -e
 
 echo "Building..."
 
@@ -20,11 +21,7 @@ cp LICENSE _build/firefox
 cp LICENSE _build/chrome
 
 echo "Building Firefox version..."
-pushd _build/firefox
-yarn build:firefox
-popd
+bunx web-ext build --source-dir _build/firefox --artifacts-dir _build/firefox/artifacts --overwrite-dest
 
 echo "Building Chrome version..."
-pushd _build/chrome
-yarn build:chrome
-popd
+bunx web-ext build --source-dir _build/chrome --artifacts-dir _build/chrome/artifacts --overwrite-dest
