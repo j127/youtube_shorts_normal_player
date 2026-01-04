@@ -5,12 +5,16 @@ document.addEventListener("yt-navigate-start", (e) => {
     redirect(path);
 });
 
+function extractVideoId(path) {
+    return path.split("/shorts/")[1]?.split(/[/?#]/)[0];
+}
+
 function redirect(path) {
     const isShorts = path.startsWith("/shorts/");
     if (!isShorts) return;
 
     const newURL = new URL(window.location);
-    const videoID = path.split("/shorts/")[1]?.split(/[/?#]/)[0];
+    const videoID = extractVideoId(path);
     if (!videoID) return;
 
     newURL.searchParams.set("v", videoID);
