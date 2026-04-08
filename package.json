@@ -15,8 +15,8 @@
     "devDependencies": {
         "@types/bun": "latest",
         "concurrently": "^9.2.1",
-        "prettier": "^3.7.4",
-        "web-ext": "^9.2.0"
+        "prettier": "^3.8.1",
+        "web-ext": "^9.4.0"
     },
     "peerDependencies": {
         "typescript": "^5.9.3"
