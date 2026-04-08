@@ -1,8 +1,6 @@
-# CLAUDE.md
+# AGENTS.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
-
-Do not enter the `TANK/` directory.
+Do not enter the `TANK/` directory or read any files that are blocked by `.gitignore`.
 
 ## Project Overview
 
