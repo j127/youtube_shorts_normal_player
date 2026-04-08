@@ -6,6 +6,10 @@
     "icons": { "48": "images/icon-48.png", "128": "images/icon-128.png" },
     "host_permissions": ["*://*.youtube.com/*"],
     "content_scripts": [
-        { "matches": ["*://*.youtube.com/*"], "js": ["main.js"] }
+        {
+            "matches": ["*://*.youtube.com/*"],
+            "js": ["main.js"],
+            "run_at": "document_start"
+        }
     ]
 }
