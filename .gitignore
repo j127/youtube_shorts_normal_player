@@ -1,4 +1,7 @@
-.claude/
+RECOMMENDATIONS.md
+.claude/*
+!.claude/hooks/
+!.claude/settings.json
 _build/
 **/node_modules/*
 .env
