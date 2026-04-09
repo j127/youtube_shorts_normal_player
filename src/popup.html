@@ -1,0 +1,98 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="UTF-8" />
+        <style>
+            body {
+                font-family:
+                    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+                    Helvetica, Arial, sans-serif;
+                width: 300px;
+                padding: 16px;
+                margin: 0;
+                color: #0f0f0f;
+                background-color: #ffffff;
+            }
+            .header {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                margin-bottom: 16px;
+            }
+            .header img {
+                width: 32px;
+                height: 32px;
+            }
+            h2 {
+                font-size: 16px;
+                margin: 0;
+                font-weight: 600;
+            }
+            p {
+                font-size: 13px;
+                line-height: 1.5;
+                color: #606060;
+                margin: 8px 0;
+            }
+            .badge {
+                display: inline-block;
+                background-color: #f2f2f2;
+                padding: 4px 8px;
+                border-radius: 4px;
+                font-size: 11px;
+                font-weight: 500;
+                color: #0f0f0f;
+                margin-top: 8px;
+            }
+            .footer {
+                margin-top: 16px;
+                padding-top: 12px;
+                border-top: 1px solid #e5e5e5;
+                font-size: 11px;
+                color: #909090;
+                text-align: center;
+            }
+            .feature-list {
+                list-style: none;
+                padding: 0;
+                margin: 12px 0;
+            }
+            .feature-list li {
+                font-size: 13px;
+                margin-bottom: 6px;
+                padding-left: 20px;
+                position: relative;
+            }
+            .feature-list li::before {
+                content: "✓";
+                position: absolute;
+                left: 0;
+                color: #cc0000;
+                font-weight: bold;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="header">
+            <img src="images/icon-48.png" alt="Icon" />
+            <h2>YouTube Shorts Normal Player</h2>
+        </div>
+
+        <p>
+            Automatically redirects YouTube Shorts to the standard player for a
+            better viewing experience.
+        </p>
+
+        <ul class="feature-list">
+            <li>Full seeker bar control</li>
+            <li>Volume and speed settings</li>
+            <li>Standard comments view</li>
+        </ul>
+
+        <div class="badge">Version 1.3.0 (Manifest V3)</div>
+
+        <div class="footer">
+            Enjoying the extension? Keep it updated for the best experience!
+        </div>
+    </body>
+</html>
