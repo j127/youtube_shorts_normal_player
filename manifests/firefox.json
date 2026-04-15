@@ -14,6 +14,16 @@
         }
     },
     "host_permissions": ["*://*.youtube.com/*"],
+    "action": {
+        "default_popup": "popup.html",
+        "default_icon": {
+            "48": "images/icon-48.png",
+            "128": "images/icon-128.png"
+        }
+    },
+    "background": {
+        "scripts": ["background.js"]
+    },
     "content_scripts": [
         {
             "matches": ["*://*.youtube.com/*"],
