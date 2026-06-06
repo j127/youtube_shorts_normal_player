@@ -48,6 +48,15 @@ function rewriteAnchor(a) {
         return;
     }
 
+    // Only rewrite YouTube links; an external link on a YouTube page (e.g. in a
+    // video description) can also have a "/shorts/" path.
+    if (
+        url.hostname !== "youtube.com" &&
+        !url.hostname.endsWith(".youtube.com")
+    ) {
+        return;
+    }
+
     const videoId = getShortsVideoId(url.pathname);
     // Leaves "/shorts" (the feed) and "/@channel/shorts" (channel tab) untouched.
     if (!videoId) return;

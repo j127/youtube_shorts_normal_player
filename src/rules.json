@@ -1,6 +1,20 @@
 [
     {
         "id": 1,
+        "priority": 2,
+        "action": {
+            "type": "redirect",
+            "redirect": {
+                "regexSubstitution": "\\1/watch?v=\\2&\\3"
+            }
+        },
+        "condition": {
+            "regexFilter": "^(https?://[^/]+)/shorts/([\\w-]+)\\?(.+)$",
+            "resourceTypes": ["main_frame"]
+        }
+    },
+    {
+        "id": 2,
         "priority": 1,
         "action": {
             "type": "redirect",
