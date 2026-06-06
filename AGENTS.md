@@ -4,7 +4,7 @@ Do not enter the `TANK/` directory or read any files that are blocked by `.gitig
 
 ## Project Overview
 
-This is a cross-browser extension that redirects YouTube Shorts URLs to the normal YouTube player. The extension supports both Firefox (Manifest v2) and Chrome/Chromium (Manifest v3).
+This is a cross-browser extension that makes YouTube Shorts open in the normal YouTube player. It rewrites Shorts links in the page, redirects Shorts requests at the network layer, and redirects any Shorts URL that still loads. The extension supports both Firefox and Chrome/Chromium using Manifest V3.
 
 ## Build System
 
@@ -42,17 +42,18 @@ Build output structure:
 
 ### Core Functionality
 
-The extension consists of a single content script (`src/main.js`) that:
+The extension makes Shorts (`/shorts/VIDEO_ID`) open in the normal watch player (`/watch?v=VIDEO_ID`) using three layers:
 
-1. Detects YouTube Shorts URLs (paths starting with `/shorts/`)
-2. Extracts the video ID from the Shorts URL
-3. Redirects to the normal YouTube player (`/watch?v=VIDEO_ID`)
-4. Listens for YouTube's SPA navigation events (`yt-navigate-start`) to handle in-page navigation
+1. **DOM link rewriting** (`src/main.js`): a `MutationObserver` rewrites Shorts anchor links to the watch URL in place (handling YouTube's lazily-added and recycled links), so clicking a Short goes straight to the normal player without the Shorts player flashing first.
+2. **Network-layer redirect** (`src/rules.json`): a `declarativeNetRequest` rule redirects top-level `/shorts/` requests before the page loads, covering direct, typed, reloaded, and external Shorts links.
+3. **Fallback redirect** (`src/main.js`): on initial load and on YouTube's SPA navigation events (`yt-navigate-start`), any remaining `/shorts/` URL is redirected to the normal player.
 
 ### Manifest Differences
 
-- **Firefox** (`manifests/firefox.json`): Uses Manifest v2 with `content_scripts` only
-- **Chrome** (`manifests/chrome.json`): Uses Manifest v3 with both `content_scripts` and `host_permissions`
+Both manifests use **Manifest V3** and share `content_scripts`, `host_permissions`, the `declarativeNetRequestWithHostAccess` permission, and the `declarative_net_request` ruleset (`rules.json`).
+
+- **Firefox** (`manifests/firefox.json`): adds `browser_specific_settings.gecko` (extension ID, `strict_min_version` 113, data-collection disclosure).
+- **Chrome** (`manifests/chrome.json`): no Gecko-specific settings.
 
 Both manifests must be kept in sync for version numbers and descriptions.
 
