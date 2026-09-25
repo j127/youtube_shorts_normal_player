@@ -1,0 +1,85 @@
+---
+name: Bug Report
+description: Something in the extension isn't working right.
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: Thanks for reporting a problem! Answer what you can. If you're not sure about something, just say so.
+  - type: textarea
+    id: problem
+    attributes:
+      label: What went wrong?
+      description: Tell us what happened and what you expected instead. Screenshots help, and you can paste or drag them into this box.
+    validations:
+      required: true
+  - type: input
+    id: link
+    attributes:
+      label: Link to the Short
+      description: Right-click the Short and choose **Copy link address**, or copy the address from your browser's address bar.
+      placeholder: https://www.youtube.com/shorts/...
+  - type: dropdown
+    id: where
+    attributes:
+      label: Where did you open the Short from?
+      options:
+        - YouTube home page
+        - Search results
+        - A channel's page
+        - Subscriptions
+        - The Shorts section or shelf
+        - Suggested videos next to another video
+        - A link from outside YouTube (email, chat, another website)
+        - Typed or pasted the address
+        - Other / not sure
+    validations:
+      required: true
+  - type: dropdown
+    id: what-happened
+    attributes:
+      label: What did you see?
+      options:
+        - The Short opened in the Shorts player instead of the normal player
+        - The normal player opened, but the Shorts player flashed first
+        - The page didn't load or kept reloading
+        - The video wouldn't play
+        - Something else on YouTube looked broken
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: What were you doing when it happened?
+      description: The steps you took, if you remember them.
+      placeholder: |
+        1. Opened youtube.com
+        2. Clicked a Short in the Shorts shelf
+        3. It opened in the Shorts player
+  - type: dropdown
+    id: browser
+    attributes:
+      label: Browser
+      options: [Chrome, Firefox, Brave, Edge, Other]
+    validations:
+      required: true
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating system
+      options: [Windows, macOS, Linux, ChromeOS, Android, Other]
+    validations:
+      required: true
+  - type: input
+    id: versions
+    attributes:
+      label: Extension and browser version
+      description: "To find the extension's version: in Chrome, Brave, or Edge, type `chrome://extensions` into the address bar and look under the extension's name. In Firefox, type `about:addons` and click the extension. For your browser's version, open the browser menu → Help → About. Leave blank if you can't find it."
+      placeholder: "Extension 1.5.0, Chrome 140"
+  - type: textarea
+    id: other
+    attributes:
+      label: Anything else?
+      description: For example, other extensions that change YouTube (ad blockers, SponsorBlock, etc.), or whether you were signed in to YouTube.
