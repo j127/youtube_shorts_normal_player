@@ -37,7 +37,7 @@ Write tests for all code.
 
 The task runner is [just](https://github.com/casey/just). `just` script names should be written in `snake_case`. Requires just >= 1.42 (the `dev` recipe uses `[parallel]`). Run `just` to list recipes. Key ones: `build`, `dev`, `dev_firefox`, `dev_chrome`, `dev_mobile`, `test`, `lint`, `format`, `check` (runs format_check, check_versions, test, lint), `bump_version <x.y.z>`, `clean`. Build zips go to `_build/artifacts/{firefox,chrome}/`. Versions live in `package.json` and both `manifests/*.json`; use `just bump_version` to keep them in sync.
 
-Bun is pinned in `mise.toml`. Shell scripts (and `justfile` recipes) must run on bash 3.2, the version macOS ships as `/bin/bash`. Don't use bash 4+ features such as namerefs (`local -n`), negative array indexes, `mapfile`, associative arrays, or `${var,,}`, and remember that expanding an empty array with `"${arr[@]}"` is an unbound-variable error under `set -u` before bash 4.4.
+Bun and just are pinned in `mise.toml`; CI (`.github/workflows/ci.yml`) installs them with `jdx/mise-action` and runs `just check` on pull requests and pushes to `main`. Keep CI calling `just` recipes rather than duplicating commands in the workflow. Shell scripts (and `justfile` recipes) must run on bash 3.2, the version macOS ships as `/bin/bash`. Don't use bash 4+ features such as namerefs (`local -n`), negative array indexes, `mapfile`, associative arrays, or `${var,,}`, and remember that expanding an empty array with `"${arr[@]}"` is an unbound-variable error under `set -u` before bash 4.4.
 
 NEVER remove comments from the code without asking. They sometimes contain important notes that are needed for later.
 

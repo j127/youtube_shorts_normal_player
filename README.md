@@ -15,8 +15,7 @@ The YouTube Shorts player is annoying becuase you can't rewind videos, among oth
 
 Requirements:
 
-- [Bun](https://bun.sh/), pinned in `mise.toml`. Run `mise install` to get the right version.
-- [just](https://github.com/casey/just) 1.42 or newer.
+- [Bun](https://bun.sh/) and [just](https://github.com/casey/just) (1.42 or newer). Both are pinned in `mise.toml`, so `mise install` gets the right versions.
 - bash. The scripts only use bash 3.2 features, so the `/bin/bash` that comes with macOS works.
 
 ```bash
@@ -27,3 +26,5 @@ just check  # format check, version check, tests, lint
 ```
 
 `just build` writes the extension zips to `_build/artifacts/`.
+
+CI (`.github/workflows/ci.yml`) runs `just check` on every pull request and on pushes to `main`.
