@@ -70,3 +70,4 @@ Both manifests must be kept in sync for version numbers and descriptions.
 - Version numbers are stored in both `package.json` and both manifest files - keep them synchronized
 - The extension has no build-time dependencies; it's vanilla JavaScript
 - The `TANK/` directory contains archived versions and Chrome Web Store artifacts - don't modify
+- **Your Turn Summary**: End every substantive reply with a short bulleted list under a bold `Your turn` heading, covering only what I need to do. It goes last, after everything else in the message. Phrase each bullet as an action I take, and put any link or command I need inside the bullet. Leave out what you already did unless I have to check it. When there is nothing for me to do, say that in one bullet, such as waiting on a check to finish, so a missing list never has to be interpreted. Skip the list only on one-line conversational answers. Keep it to about five bullets. If it runs longer, the message is doing too much.
