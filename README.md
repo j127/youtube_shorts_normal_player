@@ -10,3 +10,20 @@ Download pages:
 - [Firefox](https://addons.mozilla.org/en-US/firefox/addon/youtube-shorts-normal-player/)
 
 The YouTube Shorts player is annoying becuase you can't rewind videos, among other problems. This browser extension will automatically redirect all YouTube Shorts video so that they play in the normal YouTube player. That will allow you to rewind the videos and view them just like any normal YouTube video.
+
+## Development
+
+Requirements:
+
+- [Bun](https://bun.sh/), pinned in `mise.toml`. Run `mise install` to get the right version.
+- [just](https://github.com/casey/just) 1.42 or newer.
+- bash. The scripts only use bash 3.2 features, so the `/bin/bash` that comes with macOS works.
+
+```bash
+bun install
+just        # list recipes
+just dev    # build and run in Firefox and Chromium
+just check  # format check, version check, tests, lint
+```
+
+`just build` writes the extension zips to `_build/artifacts/`.
