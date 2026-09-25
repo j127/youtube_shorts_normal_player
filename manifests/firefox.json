@@ -13,6 +13,10 @@
       }
     }
   },
+  "action": {
+    "default_title": "YouTube Shorts Normal Player",
+    "default_popup": "popup.html"
+  },
   "permissions": ["declarativeNetRequestWithHostAccess"],
   "host_permissions": ["*://*.youtube.com/*"],
   "declarative_net_request": {
