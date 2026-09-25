@@ -164,4 +164,15 @@ describe("popup.html", () => {
     ]);
     expect(scripts.every(([, , body]) => body.trim() === "")).toBe(true);
   });
+
+  test("links to the issue list, which works without a GitHub account", () => {
+    // Most users don't have a GitHub account, and /issues/new/choose sends
+    // signed-out visitors to the login page. The list is public.
+    const link = HTML.match(
+      /<a\b[^>]*\bhref="([^"]*)"[^>]*>\s*Report a problem\s*<\/a/
+    );
+    expect(link?.[1]).toBe(
+      "https://github.com/j127/youtube_shorts_normal_player/issues"
+    );
+  });
 });
