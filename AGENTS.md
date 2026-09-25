@@ -14,7 +14,7 @@ Default to using Bun instead of Node.js. That means use commands like `bunx` ins
 
 Write tests for all code.
 
-The task runner is [just](https://github.com/casey/just). `just` script names should be written in `snake_case`.
+The task runner is [just](https://github.com/casey/just). `just` script names should be written in `snake_case`. Requires just >= 1.42 (the `dev` recipe uses `[parallel]`). Run `just` to list recipes. Key ones: `build`, `dev`, `dev_firefox`, `dev_chrome`, `dev_mobile`, `test`, `lint`, `format`, `check` (runs format_check, check_versions, test, lint), `bump_version <x.y.z>`, `clean`. Build zips go to `_build/artifacts/{firefox,chrome}/`. Versions live in `package.json` and both `manifests/*.json`; use `just bump_version` to keep them in sync.
 
 NEVER remove comments from the code without asking. They sometimes contain important notes that are needed for later.
 

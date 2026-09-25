@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-set -e
+set -euo pipefail
 
 echo "Building..."
 
 echo "Clearing _build dirs..."
 rm -rf _build
-mkdir -p _build/firefox/artifacts
-mkdir -p _build/chrome/artifacts
+mkdir -p _build/firefox _build/chrome
+mkdir -p _build/artifacts/firefox _build/artifacts/chrome
 
 echo "Copying code files..."
 cp -r src/* _build/firefox
@@ -21,7 +21,7 @@ cp LICENSE _build/firefox
 cp LICENSE _build/chrome
 
 echo "Building Firefox version..."
-bunx web-ext build --source-dir _build/firefox --artifacts-dir _build/firefox/artifacts --overwrite-dest
+bunx web-ext build --source-dir _build/firefox --artifacts-dir _build/artifacts/firefox --overwrite-dest
 
 echo "Building Chrome version..."
-bunx web-ext build --source-dir _build/chrome --artifacts-dir _build/chrome/artifacts --overwrite-dest
+bunx web-ext build --source-dir _build/chrome --artifacts-dir _build/artifacts/chrome --overwrite-dest
