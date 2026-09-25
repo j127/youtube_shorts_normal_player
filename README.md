@@ -1,15 +1,17 @@
 # YouTube Shorts Normal Player Browser Extension
 
-This is a free browser extensions that plays YouTube Shorts in the normal YouTube player.
+This is a free browser extension that plays YouTube Shorts in the normal YouTube player.
 
-It is designed for [Brave](https://brave.com/), Chrome, and Firefox.
+It is designed for [Brave](https://brave.com/), Chrome, and Firefox (desktop and Android).
 
 Download pages:
 
 - [Chrome/Brave/Chromium](https://chrome.google.com/webstore/detail/youtube-shorts-normal-pla/ojdpihjfiedojdckbmipjgoehcemgbio)
 - [Firefox](https://addons.mozilla.org/en-US/firefox/addon/youtube-shorts-normal-player/)
 
-The YouTube Shorts player is annoying becuase you can't rewind videos, among other problems. This browser extension will automatically redirect all YouTube Shorts video so that they play in the normal YouTube player. That will allow you to rewind the videos and view them just like any normal YouTube video.
+The YouTube Shorts player is annoying because you can't rewind videos, among other problems. This browser extension will automatically redirect all YouTube Shorts videos so that they play in the normal YouTube player. That will allow you to rewind the videos and view them just like any normal YouTube video.
+
+If Shorts stop opening in the normal player, click the extension's toolbar button. It shows whether the extension is allowed to run on YouTube and lets you turn that back on.
 
 ## Development
 

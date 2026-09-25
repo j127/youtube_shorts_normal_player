@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>YouTube Shorts Normal Player</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        font:
+          14px/1.4 system-ui,
+          sans-serif;
+      }
+      body {
+        margin: 0;
+        padding: 12px 14px;
+        width: 260px;
+      }
+      h1 {
+        font-size: 14px;
+        margin: 0 0 8px;
+      }
+      #status {
+        margin: 0 0 10px;
+      }
+      #status.ok::before {
+        content: "✓ ";
+        color: light-dark(#1a7f37, #3fb950);
+      }
+      #status.warn::before {
+        content: "⚠ ";
+        color: light-dark(#9a6700, #d29922);
+      }
+      button {
+        width: 100%;
+        padding: 6px;
+        font: inherit;
+        cursor: pointer;
+      }
+      footer {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 10px;
+        font-size: 12px;
+        opacity: 0.8;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>YouTube Shorts Normal Player</h1>
+    <p id="status" role="status">Checking access to YouTube…</p>
+    <button id="grant" type="button" hidden>Allow on YouTube</button>
+    <footer>
+      <span id="version"></span>
+      <a
+        href="https://github.com/j127/youtube_shorts_normal_player/issues/new/choose"
+        target="_blank"
+        rel="noopener"
+        >Report a problem</a
+      >
+    </footer>
+    <script src="popup.js"></script>
+  </body>
+</html>

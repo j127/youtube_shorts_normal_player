@@ -1,27 +1,35 @@
 ## Project Overview
 
-This is a cross-browser extension that makes YouTube Shorts open in the normal YouTube player. It rewrites Shorts links in the page, redirects Shorts requests at the network layer, and redirects any Shorts URL that still loads. The extension supports both Firefox and Chrome/Chromium using Manifest V3.
+This is a cross-browser extension that makes YouTube Shorts open in the normal YouTube player. It rewrites Shorts links in the page, redirects Shorts requests at the network layer, and redirects any Shorts URL that still loads. The extension supports both Firefox (desktop and Android) and Chrome/Chromium using Manifest V3.
 
 ## Architecture
 
 The extension makes Shorts (`/shorts/VIDEO_ID`) open in the normal watch player (`/watch?v=VIDEO_ID`) using three layers:
 
-1. **DOM link rewriting** (`src/main.js`): a `MutationObserver` watches added nodes and `href` changes and rewrites Shorts anchors to the watch URL in place, so clicking a Short goes straight to the normal player without the Shorts player flashing first. YouTube adds links lazily and recycles anchor nodes, which is why `href` changes are observed too. A rewritten `href` no longer contains `/shorts/`, so the mutation it triggers is ignored and there is no loop. Only YouTube hosts are rewritten (external links in descriptions can have `/shorts/` paths), and `/shorts` (the feed) and `/@channel/shorts` (channel tab) are left alone.
+1. **DOM link rewriting** (`src/main.js`): a `MutationObserver` watches added nodes and `href` changes and rewrites Shorts anchors to the watch URL in place, so opening a Short in a new tab (middle-click, Ctrl/Cmd-click) or copying its link gives the normal player. A plain left-click doesn't use the `href`: YouTube's router navigates from its own data (`reelWatchEndpoint`), so layer 3 handles those. YouTube adds links lazily and recycles anchor nodes, which is why `href` changes are observed too. A rewritten `href` no longer contains `/shorts/`, so the mutation it triggers is ignored and there is no loop. Only YouTube hosts are rewritten (external links in descriptions can have `/shorts/` paths), and `/shorts` (the feed) and `/@channel/shorts` (channel tab) are left alone.
 2. **Network-layer redirect** (`src/rules.json`): `declarativeNetRequest` rules redirect top-level (`main_frame`) `/shorts/` requests before the page loads, covering direct, typed, reloaded, and external Shorts links. Rule 1 (higher priority) handles URLs with a query string and keeps it; rule 2 handles the rest.
-3. **Fallback redirect** (`src/main.js`): on initial load and on YouTube's SPA navigation event (`yt-navigate-start`), any remaining `/shorts/` URL is redirected with `location.replace`, keeping existing query parameters.
+3. **Fallback redirect** (`src/main.js`): any remaining `/shorts/VIDEO_ID` URL is redirected with `location.replace`. The new URL is built from the target URL and keeps the target's query parameters, never the query of the page being left. It runs:
+   - on initial load;
+   - on YouTube's desktop SPA event `yt-navigate-start`, the earliest signal, using its `detail.url`;
+   - on every `MutationObserver` batch while the page URL is a Short. This is the backstop, because `m.youtube.com` navigates to Shorts without firing `yt-navigate-start` (or any other YouTube navigation event), and the event's `detail` is undocumented and can be unreadable from a content script;
+   - on `pageshow` for pages restored from the back/forward cache.
+
+   Each target is handled once per page. A `sessionStorage` loop guard allows at most two redirects in a row of the same video, each within 10 seconds of the last, so a YouTube-side bounce from `/watch` back to `/shorts` can't reload forever.
 
 `src/main.js` is a plain content script (not a module) injected at `document_start` on `*://*.youtube.com/*`. There is no bundler and there are no runtime dependencies: everything in `src/` ships as-is.
 
+The toolbar popup (`src/popup.html`, `src/popup.js`) shows whether the extension has host access to YouTube and has a button that requests it. Without that access neither the content script nor the DNR rules run, and users can take it away (Firefox lets them revoke MV3 host permissions; Chrome has "Site access: On click").
+
 ### Manifests
 
-Both manifests use Manifest V3 and share `content_scripts`, `host_permissions`, the `declarativeNetRequestWithHostAccess` permission, and the `declarative_net_request` ruleset (`rules.json`). Keep their versions and descriptions in sync.
+Both manifests use Manifest V3 and share `content_scripts`, `host_permissions`, the `declarativeNetRequestWithHostAccess` permission, the `declarative_net_request` ruleset (`rules.json`), and the `action` popup (`popup.html`). Keep their versions and descriptions in sync; `scripts/manifests.test.js` checks that the shared keys match.
 
-- **Firefox** (`manifests/firefox.json`): adds `browser_specific_settings.gecko` (extension ID, `strict_min_version` 113, `data_collection_permissions`). The data-collection key needs Firefox 140+ (Android 142+), which causes the two known `web-ext lint` warnings.
+- **Firefox** (`manifests/firefox.json`): adds `browser_specific_settings.gecko` (extension ID, `strict_min_version` 113, `data_collection_permissions`) and `gecko_android` (`strict_min_version` 142, so AMO lists it for Firefox for Android). The data-collection key needs Firefox 140+ (Android 142+), which causes the one known `web-ext lint` warning about desktop's `strict_min_version`.
 - **Chrome** (`manifests/chrome.json`): no Gecko-specific settings.
 
 ### Build
 
-`scripts/build.sh` copies `src/*` into `_build/firefox` and `_build/chrome`, copies `manifests/<browser>.json` into each as `manifest.json`, adds `LICENSE`, and then runs `web-ext build` to zip each one into `_build/artifacts/<browser>/`. Tests are `scripts/*.test.js`, run with `bun test`.
+`scripts/build.sh` copies `src/*` into `_build/firefox` and `_build/chrome`, copies `manifests/<browser>.json` into each as `manifest.json`, adds `LICENSE`, and then runs `web-ext build` to zip each one into `_build/artifacts/<browser>/`. Tests are `scripts/*.test.js`, run with `bun test`. Tests for `src/` live there too, because everything in `src/` ships. `main.test.js` and `popup.test.js` run the plain scripts in a `node:vm` context with stubbed browser globals.
 
 # Instructions
 
