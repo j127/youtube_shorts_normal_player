@@ -2,6 +2,7 @@ RECOMMENDATIONS.md
 .claude/*
 !.claude/hooks/
 !.claude/settings.json
+.worktrees/
 _build/
 **/node_modules/*
 .env

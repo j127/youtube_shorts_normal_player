@@ -1,73 +1,25 @@
-# AGENTS.md
-
-Do not enter the `TANK/` directory or read any files that are blocked by `.gitignore`.
-
 ## Project Overview
 
 This is a cross-browser extension that makes YouTube Shorts open in the normal YouTube player. It rewrites Shorts links in the page, redirects Shorts requests at the network layer, and redirects any Shorts URL that still loads. The extension supports both Firefox and Chrome/Chromium using Manifest V3.
 
-## Build System
+# Instructions
 
-The project uses Bun as the package manager (switched from yarn). Build commands:
+Do not read, grep, cat, or otherwise look at or edit any files or directories that are blocked by `.gitignore`.
 
-```bash
-# Build extension for both browsers
-./scripts/build.sh  # or: bun run build
+NEVER commit code that contains AI agent attribution. Do NOT add the agent name (e.g. Claude, Generated with Claude Code, Co-Authored-By Claude) anywhere in commit messages, PR descriptions, or other Git/GitHub messages.
 
-# Development with auto-reload
-bun run dev          # Runs both Firefox and Chrome in parallel
-bun run dev:firefox  # Firefox only
-bun run dev:chrome   # Chrome only
+Git history & merges: Never rewrite or force-push shared history (especially main) unless I ask. Merge PRs with a merge commit -- don't squash, and don't rebase-merge.
 
-# Format code
-bun run format
-```
+Default to using Bun instead of Node.js. That means use commands like `bunx` instead of `npx`.
 
-### Build Process
+Write tests for all code.
 
-The `build.sh` script:
+The task runner is [just](https://github.com/casey/just). `just` script names should be written in `snake_case`. Requires just >= 1.42 (the `dev` recipe uses `[parallel]`). Run `just` to list recipes. Key ones: `build`, `dev`, `dev_firefox`, `dev_chrome`, `dev_mobile`, `test`, `lint`, `format`, `check` (runs format_check, check_versions, test, lint), `bump_version <x.y.z>`, `clean`. Build zips go to `_build/artifacts/{firefox,chrome}/`. Versions live in `package.json` and both `manifests/*.json`; use `just bump_version` to keep them in sync.
 
-1. Clears `_build` directory
-2. Copies `src/*` to `_build/firefox` and `_build/chrome`
-3. Copies browser-specific manifests from `manifests/` to each build directory as `manifest.json`
-4. Copies LICENSE to both build directories
-5. Runs build scripts.
+NEVER remove comments from the code without asking. They sometimes contain important notes that are needed for later.
 
-Build output structure:
+When writing markdown, don't wrap lines in the middle of a paragraph with single line breaks. Let the lines run their full length.
 
-- `_build/firefox/` - Firefox extension (Manifest v2)
-- `_build/chrome/` - Chrome extension (Manifest v3)
+Note that `rm` and `ls` might be overriden with another bash script so you might need to type out the full paths like `/bin/rm` and `/bin/ls` to use the normal commands.
 
-## Architecture
-
-### Core Functionality
-
-The extension makes Shorts (`/shorts/VIDEO_ID`) open in the normal watch player (`/watch?v=VIDEO_ID`) using three layers:
-
-1. **DOM link rewriting** (`src/main.js`): a `MutationObserver` rewrites Shorts anchor links to the watch URL in place (handling YouTube's lazily-added and recycled links), so clicking a Short goes straight to the normal player without the Shorts player flashing first.
-2. **Network-layer redirect** (`src/rules.json`): a `declarativeNetRequest` rule redirects top-level `/shorts/` requests before the page loads, covering direct, typed, reloaded, and external Shorts links.
-3. **Fallback redirect** (`src/main.js`): on initial load and on YouTube's SPA navigation events (`yt-navigate-start`), any remaining `/shorts/` URL is redirected to the normal player.
-
-### Manifest Differences
-
-Both manifests use **Manifest V3** and share `content_scripts`, `host_permissions`, the `declarativeNetRequestWithHostAccess` permission, and the `declarative_net_request` ruleset (`rules.json`).
-
-- **Firefox** (`manifests/firefox.json`): adds `browser_specific_settings.gecko` (extension ID, `strict_min_version` 113, data-collection disclosure).
-- **Chrome** (`manifests/chrome.json`): no Gecko-specific settings.
-
-Both manifests must be kept in sync for version numbers and descriptions.
-
-## Code Style
-
-- Uses Prettier for formatting (4-space indentation for JS, 2-space for MD/YAML)
-- LF line endings enforced via `.editorconfig`
-- Double quotes for strings
-- Semicolons required
-- ES5 trailing commas
-
-## Important Notes
-
-- Version numbers are stored in both `package.json` and both manifest files - keep them synchronized
-- The extension has no build-time dependencies; it's vanilla JavaScript
-- The `TANK/` directory contains archived versions and Chrome Web Store artifacts - don't modify
-- **Your Turn Summary**: End every substantive reply with a short bulleted list under a bold `Your turn` heading, covering only what I need to do. It goes last, after everything else in the message. Phrase each bullet as an action I take, and put any link or command I need inside the bullet. Leave out what you already did unless I have to check it. When there is nothing for me to do, say that in one bullet, such as waiting on a check to finish, so a missing list never has to be interpreted. Skip the list only on one-line conversational answers. Keep it to about five bullets. If it runs longer, the message is doing too much.
+Your Turn Summary: End every substantive reply with a short bulleted list under a bold `Your turn` heading, covering only what I need to do. It goes last, after everything else in the message. Phrase each bullet as an action I take, and put any link or command I need inside the bullet. Leave out what you already did unless I have to check it. When there is nothing for me to do, say that in one bullet, such as waiting on a check to finish, so a missing list never has to be interpreted. Skip the list only on one-line conversational answers. Keep it to about five bullets. If it runs longer, the message is doing too much.

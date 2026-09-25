@@ -4,12 +4,12 @@
  * @returns {string|null} The video ID, or null if this is not a Shorts video URL.
  */
 function getShortsVideoId(pathname) {
-    if (!pathname || !pathname.startsWith("/shorts/")) return null;
+  if (!pathname || !pathname.startsWith("/shorts/")) return null;
 
-    // /shorts/VIDEO_ID -> split by "/" and take index 2.
-    // Use /[?#]/ to cut off any query params or fragments.
-    const videoId = pathname.split("/")[2]?.split(/[?#]/)[0];
-    return videoId || null;
+  // /shorts/VIDEO_ID -> split by "/" and take index 2.
+  // Use /[?#]/ to cut off any query params or fragments.
+  const videoId = pathname.split("/")[2]?.split(/[?#]/)[0];
+  return videoId || null;
 }
 
 /**
@@ -18,15 +18,15 @@ function getShortsVideoId(pathname) {
  * @param {string} urlPath - The path part of the URL (e.g., "/shorts/12345")
  */
 function handleRedirect(urlPath) {
-    const videoId = getShortsVideoId(urlPath);
-    if (!videoId) return;
+  const videoId = getShortsVideoId(urlPath);
+  if (!videoId) return;
 
-    // Preserve any existing query parameters and just change the path and video ID.
-    const newUrl = new URL(window.location.href);
-    newUrl.pathname = "/watch";
-    newUrl.searchParams.set("v", videoId);
+  // Preserve any existing query parameters and just change the path and video ID.
+  const newUrl = new URL(window.location.href);
+  newUrl.pathname = "/watch";
+  newUrl.searchParams.set("v", videoId);
 
-    window.location.replace(newUrl.toString());
+  window.location.replace(newUrl.toString());
 }
 
 /**
@@ -36,40 +36,40 @@ function handleRedirect(urlPath) {
  * @param {Element} a - A candidate anchor element.
  */
 function rewriteAnchor(a) {
-    const href = a.getAttribute("href");
-    // Cheap reject before constructing a URL.
-    if (!href || href.indexOf("/shorts/") === -1) return;
+  const href = a.getAttribute("href");
+  // Cheap reject before constructing a URL.
+  if (!href || href.indexOf("/shorts/") === -1) return;
 
-    let url;
-    try {
-        // Resolve against the origin so relative and absolute hrefs both work.
-        url = new URL(href, window.location.origin);
-    } catch {
-        return;
-    }
+  let url;
+  try {
+    // Resolve against the origin so relative and absolute hrefs both work.
+    url = new URL(href, window.location.origin);
+  } catch {
+    return;
+  }
 
-    // Only rewrite YouTube links; an external link on a YouTube page (e.g. in a
-    // video description) can also have a "/shorts/" path.
-    if (
-        url.hostname !== "youtube.com" &&
-        !url.hostname.endsWith(".youtube.com")
-    ) {
-        return;
-    }
+  // Only rewrite YouTube links; an external link on a YouTube page (e.g. in a
+  // video description) can also have a "/shorts/" path.
+  if (
+    url.hostname !== "youtube.com" &&
+    !url.hostname.endsWith(".youtube.com")
+  ) {
+    return;
+  }
 
-    const videoId = getShortsVideoId(url.pathname);
-    // Leaves "/shorts" (the feed) and "/@channel/shorts" (channel tab) untouched.
-    if (!videoId) return;
+  const videoId = getShortsVideoId(url.pathname);
+  // Leaves "/shorts" (the feed) and "/@channel/shorts" (channel tab) untouched.
+  if (!videoId) return;
 
-    url.pathname = "/watch";
-    url.searchParams.set("v", videoId);
+  url.pathname = "/watch";
+  url.searchParams.set("v", videoId);
 
-    // Preserve the original relative/absolute form to match YouTube's own markup.
-    const isAbsolute = /^https?:\/\//i.test(href);
-    a.setAttribute(
-        "href",
-        isAbsolute ? url.href : url.pathname + url.search + url.hash
-    );
+  // Preserve the original relative/absolute form to match YouTube's own markup.
+  const isAbsolute = /^https?:\/\//i.test(href);
+  a.setAttribute(
+    "href",
+    isAbsolute ? url.href : url.pathname + url.search + url.hash
+  );
 }
 
 /**
@@ -77,14 +77,13 @@ function rewriteAnchor(a) {
  * @param {Node} root - An element or document to scan.
  */
 function rewriteShortsLinks(root) {
-    // Only elements (1) and documents (9) can be queried.
-    if (root.nodeType !== 1 && root.nodeType !== 9) return;
+  // Only elements (1) and documents (9) can be queried.
+  if (root.nodeType !== 1 && root.nodeType !== 9) return;
 
-    if (root.matches && root.matches('a[href*="/shorts/"]'))
-        rewriteAnchor(root);
-    if (root.querySelectorAll) {
-        root.querySelectorAll('a[href*="/shorts/"]').forEach(rewriteAnchor);
-    }
+  if (root.matches && root.matches('a[href*="/shorts/"]')) rewriteAnchor(root);
+  if (root.querySelectorAll) {
+    root.querySelectorAll('a[href*="/shorts/"]').forEach(rewriteAnchor);
+  }
 }
 
 // 1. Fallback redirect (runs as soon as the script is injected).
@@ -93,8 +92,8 @@ handleRedirect(window.location.pathname);
 // 2. Listen for YouTube internal navigation. This event is fired by YouTube's own
 // framework before the next page starts loading.
 document.addEventListener("yt-navigate-start", (e) => {
-    const url = e.detail?.url;
-    if (url) handleRedirect(url);
+  const url = e.detail?.url;
+  if (url) handleRedirect(url);
 });
 
 // 3. Proactively rewrite Shorts links in the DOM so clicks skip the Shorts player.
@@ -103,20 +102,20 @@ document.addEventListener("yt-navigate-start", (e) => {
 // A rewritten href no longer contains "/shorts/", so the attribute mutation it
 // triggers is rejected by rewriteAnchor's cheap check -- no infinite loop.
 const observer = new MutationObserver((mutations) => {
-    for (const mutation of mutations) {
-        if (mutation.type === "attributes") {
-            if (mutation.target.nodeType === 1) rewriteAnchor(mutation.target);
-        } else {
-            for (const node of mutation.addedNodes) rewriteShortsLinks(node);
-        }
+  for (const mutation of mutations) {
+    if (mutation.type === "attributes") {
+      if (mutation.target.nodeType === 1) rewriteAnchor(mutation.target);
+    } else {
+      for (const node of mutation.addedNodes) rewriteShortsLinks(node);
     }
+  }
 });
 
 observer.observe(document.documentElement, {
-    childList: true,
-    subtree: true,
-    attributes: true,
-    attributeFilter: ["href"],
+  childList: true,
+  subtree: true,
+  attributes: true,
+  attributeFilter: ["href"],
 });
 
 // Sweep anything already present when the script runs.

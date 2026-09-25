@@ -1,16 +1,38 @@
-.swc/
-.netlify/
+# output directories
 _site/
 dist/
 build/
+
+# developer tools
 .git/
 node_modules/
 __pycache__/
 .vim/
-.vscode/
 .idea/
 pg/
+.swc/
+pnpm-lock.yaml
+bun.lock
+.venv/
+
+*.min*
+
+# caches
+.astro/
 .cache/
 .parcel-cache/
 .mypy_cache/
-bun.lock
+.next/
+.netlify/
+.shopify/
+.swc/
+.wrangler/
+
+# phoenix
+deps/
+_build/
+.elixir_ls
+priv/
+
+*.bak
+TANK/
