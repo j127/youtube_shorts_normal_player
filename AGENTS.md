@@ -33,6 +33,15 @@ Both manifests use Manifest V3 and share `content_scripts`, `host_permissions`, 
 
 `scripts/build.sh` copies `src/*` into `_build/firefox` and `_build/chrome`, copies `manifests/<browser>.json` into each as `manifest.json`, adds `LICENSE`, and then runs `web-ext build` to zip each one into `_build/artifacts/<browser>/`. Tests are `scripts/*.test.js`, run with `bun test`. Tests for `src/` live there too, because everything in `src/` ships. `main.test.js`, `background.test.js`, and `popup.test.js` run the plain scripts in a `node:vm` context with stubbed browser globals.
 
+### Releasing
+
+Cut a release when the owner asks for one, and after merging a release PR, without being asked:
+
+1. On a branch, run `just bump_version x.y.z`, commit it as "Release x.y.z" with a body like "Bump version 1.6.1 -> 1.6.2 in package.json and both manifests.", and merge the PR (merge commit) once CI passes and the owner has approved the merge.
+2. Tag the merge commit on `main` with an annotated tag, `git tag -a vx.y.z <merge commit>`. The message is a title line and then `- ` bullets of user-visible changes, like the existing `v1.6.x` tags. Push it with `git push origin vx.y.z`.
+3. The tag starts `.github/workflows/release.yml`. It runs `just check`, then `just release_check "$GITHUB_REF_NAME"` (the versions match the tag, and the tree is clean), then `just release_zips` (builds, then collects `youtube_shorts_normal_player-x.y.z-{firefox,chrome,source}.zip` in `_build/release/`). Then it creates a **draft** GitHub release with those three zips and notes generated from the merged PRs.
+4. Check that the workflow passed and the draft has the three zips, then tell the owner. The owner publishes the draft and uploads the zips: the Firefox zip and the source zip to AMO (Mozilla asks for the source with every upload), and the Chrome zip to the Chrome Web Store.
+
 # Instructions
 
 Do not read, grep, cat, or otherwise look at or edit any files or directories that are blocked by `.gitignore`.
@@ -45,9 +54,9 @@ Default to using Bun instead of Node.js. That means use commands like `bunx` ins
 
 Write tests for all code.
 
-The task runner is [just](https://github.com/casey/just). `just` script names should be written in `snake_case`. Requires just >= 1.42 (the `dev` recipe uses `[parallel]`). Run `just` to list recipes. Key ones: `build`, `dev`, `dev_firefox`, `dev_chrome`, `dev_mobile`, `test`, `lint`, `format`, `check` (runs format_check, check_versions, test, lint), `bump_version <x.y.z>`, `clean`. Build zips go to `_build/artifacts/{firefox,chrome}/`. Versions live in `package.json` and both `manifests/*.json`; use `just bump_version` to keep them in sync.
+The task runner is [just](https://github.com/casey/just). `just` script names should be written in `snake_case`. Requires just >= 1.42 (the `dev` recipe uses `[parallel]`). Run `just` to list recipes. Key ones: `build`, `dev`, `dev_firefox`, `dev_chrome`, `dev_mobile`, `test`, `lint`, `format`, `check` (runs format_check, check_versions, test, lint), `bump_version <x.y.z>`, `release_check [vx.y.z]`, `release_zips`, `clean`. Build zips go to `_build/artifacts/{firefox,chrome}/`. Versions live in `package.json` and both `manifests/*.json`; use `just bump_version` to keep them in sync.
 
-Bun and just are pinned in `mise.toml`; CI (`.github/workflows/ci.yml`) installs them with `jdx/mise-action` and runs `just check` on pull requests and pushes to `main`. Keep CI calling `just` recipes rather than duplicating commands in the workflow. Shell scripts (and `justfile` recipes) must run on bash 3.2, the version macOS ships as `/bin/bash`. Don't use bash 4+ features such as namerefs (`local -n`), negative array indexes, `mapfile`, associative arrays, or `${var,,}`, and remember that expanding an empty array with `"${arr[@]}"` is an unbound-variable error under `set -u` before bash 4.4.
+Bun and just are pinned in `mise.toml`; CI (`.github/workflows/ci.yml`) installs them with `jdx/mise-action` and runs `just check` on pull requests and pushes to `main`. The release workflow (`.github/workflows/release.yml`) does the same on version tags; see Releasing. Keep CI calling `just` recipes rather than duplicating commands in the workflow. Shell scripts (and `justfile` recipes) must run on bash 3.2, the version macOS ships as `/bin/bash`. Don't use bash 4+ features such as namerefs (`local -n`), negative array indexes, `mapfile`, associative arrays, or `${var,,}`, and remember that expanding an empty array with `"${arr[@]}"` is an unbound-variable error under `set -u` before bash 4.4.
 
 NEVER remove comments from the code without asking. They sometimes contain important notes that are needed for later.
 

@@ -1,0 +1,42 @@
+name: Release
+
+# Pushing a version tag (e.g. v1.6.2) builds the release and creates a draft
+# GitHub release with the Firefox, Chrome, and source zips attached. Publishing
+# the draft and uploading to AMO and the Chrome Web Store stay manual.
+on:
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # Installs the Bun and just versions pinned in mise.toml.
+      - uses: jdx/mise-action@c2a87611a18de5b3828c5652fe268e992400cb5c # v4.3.0
+
+      - run: bun install --frozen-lockfile
+
+      # Format check, version check, tests, web-ext lint.
+      - run: just check
+
+      # Versions match the tag, and nothing changed the tree.
+      - run: just release_check "$GITHUB_REF_NAME"
+
+      # Store zips plus the source zip AMO asks for, in _build/release/.
+      - run: just release_zips
+
+      - name: Create draft GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >-
+          gh release create "$GITHUB_REF_NAME" _build/release/*.zip
+          --draft --verify-tag --generate-notes --title "$GITHUB_REF_NAME"
