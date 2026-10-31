@@ -60,6 +60,14 @@ test:
 # Run every check
 check: format_check check_versions test lint
 
+# Preflight for a release: versions match (and match the tag, if given), clean tree
+release_check tag="":
+  ./scripts/release_check.sh "{{tag}}"
+
+# Build, then collect the Firefox, Chrome, and source zips in _build/release/
+release_zips: build
+  ./scripts/release_zips.sh
+
 # Remove build artifacts and junk files
 clean:
   rm -rf _build
