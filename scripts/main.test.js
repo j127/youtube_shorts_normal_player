@@ -58,7 +58,12 @@ function descendants(el) {
 // every location.replace() and exposes the listeners it registers.
 function loadContentScript(
   href,
-  { storage = createStorage(), readyState = "loading" } = {}
+  {
+    storage = createStorage(),
+    readyState = "loading",
+    userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:159.0) Gecko/20100101 Firefox/159.0",
+    extensionApi = { runtime: { getManifest: () => ({ version: "1.6.2" }) } },
+  } = {}
 ) {
   let current = new URL(href);
   const replaced = [];
@@ -87,6 +92,8 @@ function loadContentScript(
       replaceState: (_state, _title, url) => (current = new URL(url, current)),
     },
     setTimeout: (fn, ms) => timers.push({ fn, ms }),
+    navigator: { userAgent },
+    browser: extensionApi,
     addEventListener: (type, fn) => (listeners.window[type] = fn),
     document: {
       nodeType: 9,
@@ -137,7 +144,7 @@ function noticeParts(notice) {
   const all = descendants(notice);
   return {
     text: all.map((el) => el.textContent).join(" "),
-    link: all.find((el) => el.tagName === "A"),
+    links: all.filter((el) => el.tagName === "A"),
     button: all.find((el) => el.tagName === "BUTTON"),
   };
 }
@@ -557,16 +564,70 @@ describe("fallback notice", () => {
     expect(page.notice).not.toBeNull();
   });
 
-  test("says what happened and links to details", () => {
+  test("says what happened and asks for a report", () => {
     const page = loadContentScript(LET_THROUGH, { readyState: "complete" });
-    const { text, link } = noticeParts(page.notice);
+    const { text, links } = noticeParts(page.notice);
     expect(text).toContain("YouTube Shorts Normal Player");
     expect(text).toContain("Shorts player for the account you're signed in");
-    expect(link.href).toBe(
+    expect(text).toContain("Please report it");
+    expect(links.map((a) => a.textContent)).toEqual([
+      "Report it",
+      "Learn more",
+    ]);
+    expect(links[1].href).toBe(
       "https://github.com/j127/youtube_shorts_normal_player#when-youtube-wont-allow-the-normal-player"
     );
-    expect(link.target).toBe("_blank");
-    expect(link.rel).toBe("noopener");
+    for (const link of links) {
+      expect(link.target).toBe("_blank");
+      expect(link.rel).toBe("noopener");
+    }
+  });
+
+  test("fills in the report form", () => {
+    const page = loadContentScript(
+      "https://m.youtube.com/shorts/abc123?si=share-id&ysnp_fallback=1",
+      { readyState: "complete" }
+    );
+    const url = new URL(noticeParts(page.notice).links[0].href);
+    expect(url.origin + url.pathname).toBe(
+      "https://github.com/j127/youtube_shorts_normal_player/issues/new"
+    );
+    expect(Object.fromEntries(url.searchParams)).toEqual({
+      template: "shorts-player-notice.yaml",
+      // No share ID or other query parameters.
+      link: "https://m.youtube.com/shorts/abc123",
+      versions: "Extension 1.6.2, Firefox 159 on Windows",
+    });
+  });
+
+  test("still links to the form without the extension API or a user agent", () => {
+    const page = loadContentScript(LET_THROUGH, {
+      readyState: "complete",
+      userAgent: "",
+      extensionApi: null,
+    });
+    const url = new URL(noticeParts(page.notice).links[0].href);
+    expect(url.searchParams.get("versions")).toBe(
+      "Extension unknown, Unknown browser"
+    );
+  });
+
+  test("the report form exists and has the fields the link fills in", () => {
+    const page = loadContentScript(LET_THROUGH, { readyState: "complete" });
+    const url = new URL(noticeParts(page.notice).links[0].href);
+    const template = readFileSync(
+      join(
+        import.meta.dir,
+        "../.github/ISSUE_TEMPLATE",
+        url.searchParams.get("template")
+      ),
+      "utf8"
+    );
+    for (const field of url.searchParams.keys()) {
+      if (field !== "template") expect(template).toContain(`id: ${field}\n`);
+    }
+    // Reports are counted by this label.
+    expect(template).toContain('labels: ["youtube-bounce"]');
   });
 
   test("is announced to screen readers and keeps YouTube's styles out", () => {
@@ -587,9 +648,9 @@ describe("fallback notice", () => {
     expect(page.notice).toBeNull();
   });
 
-  test("closes itself after 15 seconds", () => {
+  test("closes itself after 30 seconds", () => {
     const page = loadContentScript(LET_THROUGH, { readyState: "complete" });
-    expect(page.timers.map((t) => t.ms)).toEqual([15000]);
+    expect(page.timers.map((t) => t.ms)).toEqual([30000]);
     page.timers[0].fn();
     expect(page.notice).toBeNull();
   });
@@ -617,5 +678,44 @@ describe("fallback notice", () => {
     });
     page.fire("yt-navigate-start", { url: "/shorts/xyz789" });
     expect(page.notice).toBeNull();
+  });
+});
+
+describe("describeBrowser", () => {
+  const { context } = loadContentScript(HOME);
+
+  test.each([
+    [
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:159.0) Gecko/20100101 Firefox/159.0",
+      "Firefox 159 on Windows",
+    ],
+    [
+      "Mozilla/5.0 (Android 14; Mobile; rv:142.0) Gecko/142.0 Firefox/142.0",
+      "Firefox 142 on Android",
+    ],
+    [
+      "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36",
+      "Chrome 141 on macOS",
+    ],
+    [
+      "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Mobile Safari/537.36",
+      "Chrome 141 on Android",
+    ],
+    [
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36 Edg/141.0.0.0",
+      "Edge 141 on Windows",
+    ],
+    [
+      "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36 OPR/125.0.0.0",
+      "Opera 125 on Linux",
+    ],
+    [
+      "Mozilla/5.0 (X11; CrOS x86_64 14541.0.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36",
+      "Chrome 141 on ChromeOS",
+    ],
+    ["Something/1.0", "Unknown browser"],
+    [undefined, "Unknown browser"],
+  ])("%p -> %p", (userAgent, expected) => {
+    expect(context.describeBrowser(userAgent)).toBe(expected);
   });
 });

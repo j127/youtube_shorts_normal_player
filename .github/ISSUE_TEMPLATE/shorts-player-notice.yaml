@@ -1,0 +1,46 @@
+# Linked from the notice in src/main.js, which fills in `link` and `versions`
+# through query parameters. Keep those field ids (scripts/main.test.js checks).
+name: Shorts open in the Shorts player (with a notice)
+description: The extension showed a notice saying YouTube keeps sending Shorts back to the Shorts player.
+title: "[Notice] YouTube sends Shorts back to the Shorts player"
+labels: ["youtube-bounce"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting this! YouTube seems to be sending Shorts back to the Shorts player for some signed-in accounts, so the extension can't open them in the normal player. Each report helps show how many people this affects.
+
+        Every question is optional, and the extension has filled in what it could, so you can submit the form as it is. Background is in [issue #27](https://github.com/j127/youtube_shorts_normal_player/issues/27).
+  - type: dropdown
+    id: signed-out
+    attributes:
+      label: Do Shorts open in the normal player when you're signed out of YouTube?
+      description: For example, in a private window.
+      options:
+        - "Yes"
+        - "No"
+        - Didn't try
+  - type: dropdown
+    id: other-account
+    attributes:
+      label: Do Shorts open in the normal player with a different Google account?
+      options:
+        - "Yes"
+        - "No, it happens with all my accounts"
+        - I only have one account
+        - Didn't try
+  - type: input
+    id: link
+    attributes:
+      label: Link to the Short
+      placeholder: https://www.youtube.com/shorts/...
+  - type: input
+    id: versions
+    attributes:
+      label: Extension and browser version
+      placeholder: "Extension 1.6.2, Firefox 159 on Windows"
+  - type: textarea
+    id: other
+    attributes:
+      label: Anything else?
+      description: For example, when it started, or anything that makes it go away.

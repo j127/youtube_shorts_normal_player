@@ -97,9 +97,16 @@ const FALLBACK_PARAM = "ysnp_fallback";
 const FALLBACK_KEY = "youtubeShortsNormalPlayer:fallback";
 const NOTICE_KEY = "youtubeShortsNormalPlayer:noticeShown";
 const NOTICE_ID = "youtube-shorts-normal-player-notice";
-const NOTICE_TIMEOUT_MS = 15000;
+// Long enough to read it and decide whether to report it.
+const NOTICE_TIMEOUT_MS = 30000;
 const HELP_URL =
   "https://github.com/j127/youtube_shorts_normal_player#when-youtube-wont-allow-the-normal-player";
+// The owner wants every affected user to report it, to see how widespread it is.
+// The issue form's labels count the reports. Its `link` and `versions` field ids
+// must match the query parameters set in reportUrl().
+const REPORT_URL =
+  "https://github.com/j127/youtube_shorts_normal_player/issues/new";
+const REPORT_TEMPLATE = "shorts-player-notice.yaml";
 
 // In-memory copies, for when sessionStorage is blocked.
 let fallbackActive = false;
@@ -185,6 +192,63 @@ function showFallbackNotice() {
   }
 }
 
+/**
+ * Name the browser and OS from a user agent string, for the report form.
+ * Brave reports itself as Chrome.
+ * @param {string} [userAgent] - navigator.userAgent.
+ * @returns {string} For example "Firefox 159 on Windows".
+ */
+function describeBrowser(userAgent = "") {
+  // Edge and Opera also contain "Chrome/", so check them first.
+  const browsers = [
+    ["Firefox", "Firefox"],
+    ["Edg", "Edge"],
+    ["OPR", "Opera"],
+    ["Chrome", "Chrome"],
+  ];
+  let browser = "Unknown browser";
+  for (const [token, name] of browsers) {
+    const match = new RegExp(`${token}/(\\d+)`).exec(userAgent);
+    if (match) {
+      browser = `${name} ${match[1]}`;
+      break;
+    }
+  }
+
+  // Android user agents can also contain "Linux", so check it first.
+  const systems = [
+    [/Android/, "Android"],
+    [/iPhone|iPad/, "iOS"],
+    [/Windows/, "Windows"],
+    [/CrOS/, "ChromeOS"],
+    [/Mac OS X|Macintosh/, "macOS"],
+    [/Linux/, "Linux"],
+  ];
+  const system = systems.find(([pattern]) => pattern.test(userAgent));
+  return system ? `${browser} on ${system[1]}` : browser;
+}
+
+/**
+ * The issue form for reporting the fallback, filled in with what the extension
+ * knows. The Short's query string (e.g. a share ID) is left out.
+ * @returns {string} A github.com URL.
+ */
+function reportUrl() {
+  let version = "unknown";
+  try {
+    version = (globalThis.browser ?? globalThis.chrome).runtime.getManifest()
+      .version;
+  } catch {
+    // Leave it as "unknown"; the reporter can fill it in.
+  }
+  const params = new URLSearchParams({
+    template: REPORT_TEMPLATE,
+    link: window.location.origin + window.location.pathname,
+    versions: `Extension ${version}, ${describeBrowser(window.navigator?.userAgent)}`,
+  });
+  return `${REPORT_URL}?${params}`;
+}
+
 const NOTICE_CSS = `
   .notice {
     position: fixed;
@@ -209,6 +273,21 @@ const NOTICE_CSS = `
   p { margin: 0 0 6px; }
   strong { font-weight: 500; }
   a { color: #3ea6ff; }
+  .links {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin: 10px 0 0;
+  }
+  .report {
+    padding: 6px 14px;
+    border-radius: 18px;
+    background: #3ea6ff;
+    color: #0f0f0f;
+    font-weight: 500;
+    text-decoration: none;
+  }
+  .report:hover { background: #65b8ff; }
   button {
     position: absolute;
     top: 6px;
@@ -225,6 +304,20 @@ const NOTICE_CSS = `
   }
   button:hover { background: rgb(255 255 255 / 0.15); }
 `;
+
+/**
+ * @param {string} href - Where the link goes.
+ * @param {string} text - The link text.
+ * @returns {HTMLAnchorElement} A link that opens in a new tab.
+ */
+function newTabLink(href, text) {
+  const link = document.createElement("a");
+  link.href = href;
+  link.target = "_blank";
+  link.rel = "noopener";
+  link.textContent = text;
+  return link;
+}
 
 /**
  * Add the notice to the page. It lives in a shadow root so YouTube's styles
@@ -252,15 +345,15 @@ function renderFallbackNotice() {
   const message = document.createElement("p");
   message.textContent =
     "YouTube keeps sending this Short back to the Shorts player for the account " +
-    "you're signed in with, so it can't open in the normal player. YouTube seems " +
-    "to be testing this on some accounts. Signed out, Shorts still open in the " +
-    "normal player.";
+    "you're signed in with, so it can't open in the normal player. It looks like " +
+    "a YouTube test on some accounts. Please report it so we can see how many " +
+    "people it affects.";
 
-  const link = document.createElement("a");
-  link.href = HELP_URL;
-  link.target = "_blank";
-  link.rel = "noopener";
-  link.textContent = "Learn more";
+  const links = document.createElement("p");
+  links.className = "links";
+  const report = newTabLink(reportUrl(), "Report it");
+  report.className = "report";
+  links.append(report, newTabLink(HELP_URL, "Learn more"));
 
   const close = document.createElement("button");
   close.type = "button";
@@ -268,7 +361,7 @@ function renderFallbackNotice() {
   close.textContent = "×";
   close.addEventListener("click", () => host.remove());
 
-  box.append(title, message, link, close);
+  box.append(title, message, links, close);
   root.append(style, box);
   (document.body ?? document.documentElement).append(host);
   setTimeout(() => host.remove(), NOTICE_TIMEOUT_MS);
