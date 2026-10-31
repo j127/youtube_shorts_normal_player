@@ -13,7 +13,7 @@ const ALLOWS = RULES.filter((r) => r.action.type === "allow");
 // enough of an extension API for its top-level listener registration.
 function bounceRule(videoId) {
   const noop = { addListener() {} };
-  const context = { URL, browser: { webRequest: { onBeforeRedirect: noop } } };
+  const context = { URL, browser: { webRequest: { onHeadersReceived: noop } } };
   vm.createContext(context);
   vm.runInContext(read("src/background.js"), context);
   return context.bounceRule(videoId);
