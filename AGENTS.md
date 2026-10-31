@@ -4,10 +4,10 @@ This is a cross-browser extension that makes YouTube Shorts open in the normal Y
 
 ## Architecture
 
-The extension makes Shorts (`/shorts/VIDEO_ID`) open in the normal watch player (`/watch?v=VIDEO_ID`) using three layers:
+The extension makes Shorts (`/shorts/VIDEO_ID`) open in the normal watch player (`/watch?v=VIDEO_ID`) using three layers, plus a fallback for when YouTube refuses:
 
 1. **DOM link rewriting** (`src/main.js`): a `MutationObserver` watches added nodes and `href` changes and rewrites Shorts anchors to the watch URL in place, so opening a Short in a new tab (middle-click, Ctrl/Cmd-click) or copying its link gives the normal player. A plain left-click doesn't use the `href`: YouTube's router navigates from its own data (`reelWatchEndpoint`), so layer 3 handles those. YouTube adds links lazily and recycles anchor nodes, which is why `href` changes are observed too. A rewritten `href` no longer contains `/shorts/`, so the mutation it triggers is ignored and there is no loop. Only YouTube hosts are rewritten (external links in descriptions can have `/shorts/` paths), and `/shorts` (the feed) and `/@channel/shorts` (channel tab) are left alone.
-2. **Network-layer redirect** (`src/rules.json`): `declarativeNetRequest` rules redirect top-level (`main_frame`) `/shorts/` requests before the page loads, covering direct, typed, reloaded, and external Shorts links. Rule 1 (higher priority) handles URLs with a query string and keeps it; rule 2 handles the rest.
+2. **Network-layer redirect** (`src/rules.json`): `declarativeNetRequest` rules redirect top-level (`main_frame`) `/shorts/` requests before the page loads, covering direct, typed, reloaded, and external Shorts links. Rule 1 (higher priority) handles URLs with a query string and keeps it; rule 2 handles the rest. Rule 3 (highest priority) is an `allow` rule for Shorts URLs carrying `ysnp_fallback=1`, which layer 4 uses.
 3. **Fallback redirect** (`src/main.js`): any remaining `/shorts/VIDEO_ID` URL is redirected with `location.replace`. The new URL is built from the target URL and keeps the target's query parameters, never the query of the page being left. It runs:
    - on initial load;
    - on YouTube's desktop SPA event `yt-navigate-start`, the earliest signal, using its `detail.url`;
@@ -16,20 +16,22 @@ The extension makes Shorts (`/shorts/VIDEO_ID`) open in the normal watch player 
 
    Each target is handled once per page. A `sessionStorage` loop guard allows at most two redirects in a row of the same video, each within 10 seconds of the last, so a YouTube-side bounce from `/watch` back to `/shorts` can't reload forever.
 
-`src/main.js` is a plain content script (not a module) injected at `document_start` on `*://*.youtube.com/*`. There is no bundler and there are no runtime dependencies: everything in `src/` ships as-is.
+4. **Shorts player fallback** (`src/background.js`, `src/main.js`): for some signed-in accounts YouTube's server answers `/watch?v=VIDEO_ID` with a redirect to `/shorts/VIDEO_ID` (issue #27). With layer 2 that loops until the browser shows a "too many redirects" error, and layer 3's guard can't help because no page loads. The background script watches `webRequest.onBeforeRedirect` for a YouTube `/watch` request redirected to `/shorts/`, and adds a session DNR rule (priority 3, between the redirects and the allow rule, ID hashed from the video ID so re-adding replaces it) that sends that Short to `/shorts/VIDEO_ID?ysnp_fallback=1`. Rule 3 lets that through, so the loop ends on the Shorts player. `main.js` then removes the parameter with `history.replaceState`, marks the tab in `sessionStorage` so later Shorts in it aren't redirected (no reload per swipe), and shows a notice once per tab, in a shadow root, for 30 seconds. The notice asks every affected user to report it (the owner wants to know how widespread this is): **Report it** opens the `.github/ISSUE_TEMPLATE/shorts-player-notice.yaml` issue form with `link` (the Short, without its query) and `versions` (extension version and browser, from `describeBrowser`) filled in through query parameters, and the form's `youtube-bounce` label counts the reports. `scripts/main.test.js` checks the form exists and has those field ids. **Learn more** links to the README section. Layer 3's loop guard tripping marks the tab the same way. Session rules clear on browser restart or extension update, and a new tab tries the normal player again. `ysnp_fallback` is defined in `background.js`, `main.js`, and `rules.json`; `scripts/rules.test.js` checks they match.
+
+`src/main.js` is a plain content script (not a module) injected at `document_start` on `*://*.youtube.com/*`. `src/background.js` is a plain script too: Firefox loads it as an MV3 event page (`background.scripts`) and Chrome as a service worker (`background.service_worker`), so it registers its listener at the top level. There is no bundler and there are no runtime dependencies: everything in `src/` ships as-is.
 
 The toolbar popup (`src/popup.html`, `src/popup.js`) shows whether the extension has host access to YouTube and has a button that requests it. Without that access neither the content script nor the DNR rules run, and users can take it away (Firefox lets them revoke MV3 host permissions; Chrome has "Site access: On click").
 
 ### Manifests
 
-Both manifests use Manifest V3 and share `content_scripts`, `host_permissions`, the `declarativeNetRequestWithHostAccess` permission, the `declarative_net_request` ruleset (`rules.json`), and the `action` popup (`popup.html`). Keep their versions and descriptions in sync; `scripts/manifests.test.js` checks that the shared keys match.
+Both manifests use Manifest V3 and share `content_scripts`, `host_permissions`, the `declarativeNetRequestWithHostAccess` and `webRequest` permissions, the `declarative_net_request` ruleset (`rules.json`), and the `action` popup (`popup.html`). Keep their versions and descriptions in sync; `scripts/manifests.test.js` checks that the shared keys match. `background` is the one key that differs: Firefox uses `scripts`, Chrome uses `service_worker`.
 
 - **Firefox** (`manifests/firefox.json`): adds `browser_specific_settings.gecko` (extension ID, `strict_min_version` 113, `data_collection_permissions`) and `gecko_android` (`strict_min_version` 142, so AMO lists it for Firefox for Android). The data-collection key needs Firefox 140+ (Android 142+), which causes the one known `web-ext lint` warning about desktop's `strict_min_version`.
 - **Chrome** (`manifests/chrome.json`): no Gecko-specific settings.
 
 ### Build
 
-`scripts/build.sh` copies `src/*` into `_build/firefox` and `_build/chrome`, copies `manifests/<browser>.json` into each as `manifest.json`, adds `LICENSE`, and then runs `web-ext build` to zip each one into `_build/artifacts/<browser>/`. Tests are `scripts/*.test.js`, run with `bun test`. Tests for `src/` live there too, because everything in `src/` ships. `main.test.js` and `popup.test.js` run the plain scripts in a `node:vm` context with stubbed browser globals.
+`scripts/build.sh` copies `src/*` into `_build/firefox` and `_build/chrome`, copies `manifests/<browser>.json` into each as `manifest.json`, adds `LICENSE`, and then runs `web-ext build` to zip each one into `_build/artifacts/<browser>/`. Tests are `scripts/*.test.js`, run with `bun test`. Tests for `src/` live there too, because everything in `src/` ships. `main.test.js`, `background.test.js`, and `popup.test.js` run the plain scripts in a `node:vm` context with stubbed browser globals.
 
 # Instructions
 
