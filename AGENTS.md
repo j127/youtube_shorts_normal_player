@@ -39,8 +39,8 @@ Cut a release when the owner asks for one, and after merging a release PR, witho
 
 1. On a branch, run `just bump_version x.y.z`, commit it as "Release x.y.z" with a body like "Bump version 1.6.1 -> 1.6.2 in package.json and both manifests.", and merge the PR (merge commit) once CI passes and the owner has approved the merge.
 2. Tag the merge commit on `main` with an annotated tag, `git tag -a vx.y.z <merge commit>`. The message is a title line and then `- ` bullets of user-visible changes, like the existing `v1.6.x` tags. Push it with `git push origin vx.y.z`.
-3. The tag starts `.github/workflows/release.yml`. It runs `just check`, then `just release_check "$GITHUB_REF_NAME"` (the versions match the tag, and the tree is clean), then `just release_zips` (builds, then collects `youtube_shorts_normal_player-x.y.z-{firefox,chrome,source}.zip` in `_build/release/`). Then it creates a **draft** GitHub release with those three zips and notes generated from the merged PRs.
-4. Check that the workflow passed and the draft has the three zips, then tell the owner. The owner publishes the draft and uploads the zips: the Firefox zip and the source zip to AMO (Mozilla asks for the source with every upload), and the Chrome zip to the Chrome Web Store.
+3. The tag starts `.github/workflows/release.yml`. It runs `just check`, then `just release_check "$GITHUB_REF_NAME"` (the versions match the tag, and the tree is clean), then `just release_zips` (builds, then collects `youtube_shorts_normal_player-x.y.z-{firefox,chrome}.zip` in `_build/release/`). Then it creates a **draft** GitHub release with those two zips and notes generated from the merged PRs.
+4. Check that the workflow passed and the draft has the two zips, then tell the owner. The owner publishes the draft and uploads the Firefox zip to AMO and the Chrome zip to the Chrome Web Store. AMO doesn't need the source code, because the extension is plain JavaScript that ships as-is (no bundling or minifying), so the answer to AMO's "Do you need to submit source code?" is No.
 
 # Instructions
 

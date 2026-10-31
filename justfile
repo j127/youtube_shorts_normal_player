@@ -64,7 +64,7 @@ check: format_check check_versions test lint
 release_check tag="":
   ./scripts/release_check.sh "{{tag}}"
 
-# Build, then collect the Firefox, Chrome, and source zips in _build/release/
+# Build, then collect the Firefox and Chrome zips in _build/release/
 release_zips: build
   ./scripts/release_zips.sh
 

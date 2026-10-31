@@ -1,8 +1,8 @@
 name: Release
 
 # Pushing a version tag (e.g. v1.6.2) builds the release and creates a draft
-# GitHub release with the Firefox, Chrome, and source zips attached. Publishing
-# the draft and uploading to AMO and the Chrome Web Store stay manual.
+# GitHub release with the Firefox and Chrome zips attached. Publishing the
+# draft and uploading to AMO and the Chrome Web Store stay manual.
 on:
   push:
     tags:
@@ -31,7 +31,7 @@ jobs:
       # Versions match the tag, and nothing changed the tree.
       - run: just release_check "$GITHUB_REF_NAME"
 
-      # Store zips plus the source zip AMO asks for, in _build/release/.
+      # Firefox and Chrome store zips, in _build/release/.
       - run: just release_zips
 
       - name: Create draft GitHub release

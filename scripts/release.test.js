@@ -147,29 +147,17 @@ describe.each(SHELLS)("release_zips.sh with %s", (shell) => {
   });
   afterEach(() => rmSync(root, { recursive: true, force: true }));
 
+  // Only the store zips: AMO doesn't need a source zip for plain JavaScript.
   test("names the store zips by browser", () => {
     expect(zips().code).toBe(0);
     expect(readdirSync(release()).sort()).toEqual([
       `${NAME}-chrome.zip`,
       `${NAME}-firefox.zip`,
-      `${NAME}-source.zip`,
     ]);
     expect(readFileSync(release(`${NAME}-firefox.zip`), "utf8")).toBe(
       "firefox"
     );
     expect(readFileSync(release(`${NAME}-chrome.zip`), "utf8")).toBe("chrome");
-  });
-
-  test("makes the source zip from tracked files only", () => {
-    write(root, "untracked.txt", "");
-    expect(zips().code).toBe(0);
-    const listing = run(["unzip", "-Z1", release(`${NAME}-source.zip`)], root);
-    const files = listing.stdout.trim().split("\n");
-    expect(files).toContain(`${NAME}-source/src/main.js`);
-    expect(files).toContain(`${NAME}-source/package.json`);
-    expect(files.every((f) => f.startsWith(`${NAME}-source/`))).toBe(true);
-    expect(files.some((f) => f.includes("untracked.txt"))).toBe(false);
-    expect(files.some((f) => f.includes("_build"))).toBe(false);
   });
 
   test("replaces files from an earlier run", () => {
@@ -178,8 +166,13 @@ describe.each(SHELLS)("release_zips.sh with %s", (shell) => {
       "_build/release/youtube_shorts_normal_player-1.0.0-firefox.zip",
       ""
     );
+    write(
+      root,
+      "_build/release/youtube_shorts_normal_player-1.0.0-source.zip",
+      ""
+    );
     expect(zips().code).toBe(0);
-    expect(readdirSync(release())).toHaveLength(3);
+    expect(readdirSync(release())).toHaveLength(2);
   });
 
   test("fails if the build hasn't run", () => {
@@ -225,7 +218,7 @@ describe("release workflow", () => {
     ]);
   });
 
-  test("creates a draft release with the three zips", () => {
+  test("creates a draft release with the store zips", () => {
     const create = runs.at(-1);
     expect(create).toStartWith(
       'gh release create "$GITHUB_REF_NAME" _build/release/*.zip'
