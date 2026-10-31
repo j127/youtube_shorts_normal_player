@@ -114,29 +114,44 @@ async function addBounceRule(videoId) {
   }
 }
 
+// The statuses a browser follows to the Location header.
 const REDIRECT_STATUS_CODES = new Set([301, 302, 303, 307, 308]);
+
+/**
+ * Where a response redirects to, read from its Location header.
+ * @param {object} details - The details of an onHeadersReceived event.
+ * @returns {string|null} The absolute redirect URL, or null if the response
+ *   isn't a redirect.
+ */
+function getRedirectUrl(details) {
+  if (!REDIRECT_STATUS_CODES.has(details.statusCode)) return null;
+
+  const locationHeader = details.responseHeaders?.find(
+    (header) => header.name.toLowerCase() === "location"
+  );
+
+  if (!locationHeader?.value) return null;
+
+  // Location can be relative to the requested URL.
+  try {
+    return new URL(locationHeader.value, details.url).href;
+  } catch {
+    return null;
+  }
+}
 
 // Registered at the top level so the event can wake the background script.
 // Inspect the response headers to detect YouTube's redirect before the
 // browser follows it.
+//
+// Not onBeforeRedirect: Firefox doesn't report this redirect there when a
+// service worker answers the page load with its navigation preload response,
+// which YouTube's service worker does (issue #27). onHeadersReceived sees the
+// 3xx response and its Location header in both Firefox and Chrome.
 api.webRequest.onHeadersReceived.addListener(
   (details) => {
-    if (!REDIRECT_STATUS_CODES.has(details.statusCode)) return;
-
-    const locationHeader = details.responseHeaders?.find(
-      (header) => header.name.toLowerCase() === "location"
-    );
-
-    if (!locationHeader?.value) return;
-
-    let redirectUrl;
-    try {
-      redirectUrl = new URL(locationHeader.value, details.url).href;
-    } catch {
-      return;
-    }
-
-    const videoId = getBouncedVideoId(details.url, redirectUrl);
+    const redirectUrl = getRedirectUrl(details);
+    const videoId = redirectUrl && getBouncedVideoId(details.url, redirectUrl);
     if (videoId) addBounceRule(videoId);
   },
   { urls: ["*://*.youtube.com/watch*"], types: ["main_frame"] },

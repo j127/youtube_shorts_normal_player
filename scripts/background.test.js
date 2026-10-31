@@ -17,6 +17,7 @@ function loadBackground({ namespace = "browser", failUpdates = false } = {}) {
   const warnings = [];
   let listener = null;
   let filter = null;
+  let extraInfoSpec = null;
 
   const api = {
     declarativeNetRequest: {
@@ -26,10 +27,11 @@ function loadBackground({ namespace = "browser", failUpdates = false } = {}) {
       },
     },
     webRequest: {
-      onBeforeRedirect: {
-        addListener: (fn, urlFilter) => {
+      onHeadersReceived: {
+        addListener: (fn, urlFilter, extra) => {
           listener = fn;
           filter = urlFilter;
+          extraInfoSpec = extra;
         },
       },
     },
@@ -48,11 +50,31 @@ function loadBackground({ namespace = "browser", failUpdates = false } = {}) {
     updates,
     warnings,
     filter,
-    // Fire onBeforeRedirect and wait for the rule update it starts.
-    redirect: async (url, redirectUrl) => {
-      listener({ url, redirectUrl, type: "main_frame" });
+    extraInfoSpec,
+    // Fire onHeadersReceived and wait for any rule update it starts.
+    respond: async (details) => {
+      listener({ type: "main_frame", ...details });
       await new Promise((resolve) => setTimeout(resolve, 0));
     },
+    // A redirect response from url to location (absolute or relative).
+    redirect: async (url, location, statusCode = 303) => {
+      listener({
+        url,
+        statusCode,
+        responseHeaders: [{ name: "location", value: location }],
+        type: "main_frame",
+      });
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    },
+  };
+}
+
+// The details of an onHeadersReceived event for a /watch request.
+function response(statusCode, responseHeaders) {
+  return {
+    url: "https://www.youtube.com/watch?v=abc123",
+    statusCode,
+    responseHeaders,
   };
 }
 
@@ -125,6 +147,64 @@ describe("getBouncedVideoId", () => {
   });
 });
 
+describe("getRedirectUrl", () => {
+  const { context } = loadBackground();
+  const location = (value) => [{ name: "Location", value }];
+
+  test.each([301, 302, 303, 307, 308])("reads a %p redirect", (status) => {
+    expect(
+      context.getRedirectUrl(
+        response(status, location("https://www.youtube.com/shorts/abc123"))
+      )
+    ).toBe("https://www.youtube.com/shorts/abc123");
+  });
+
+  test("keeps YouTube's http:// Location as sent", () => {
+    expect(
+      context.getRedirectUrl(
+        response(303, location("http://www.youtube.com/shorts/abc123"))
+      )
+    ).toBe("http://www.youtube.com/shorts/abc123");
+  });
+
+  test("resolves a relative Location against the request URL", () => {
+    expect(
+      context.getRedirectUrl(response(302, location("/shorts/abc123?si=x")))
+    ).toBe("https://www.youtube.com/shorts/abc123?si=x");
+  });
+
+  test.each(["location", "LOCATION", "Location"])(
+    "matches the %p header name in any case",
+    (name) => {
+      const headers = [
+        { name: "content-type", value: "text/html" },
+        { name, value: "/shorts/abc123" },
+      ];
+      expect(context.getRedirectUrl(response(303, headers))).toBe(
+        "https://www.youtube.com/shorts/abc123"
+      );
+    }
+  );
+
+  test.each([200, 204, 300, 304, 404])(
+    "ignores a Location on a %p response",
+    (status) => {
+      expect(
+        context.getRedirectUrl(response(status, location("/shorts/abc123")))
+      ).toBeNull();
+    }
+  );
+
+  test.each([
+    ["no headers", undefined],
+    ["no Location header", [{ name: "content-type", value: "text/html" }]],
+    ["an empty Location", location("")],
+    ["a Location that isn't a URL", location("https://[::1")],
+  ])("returns null for %s", (_, headers) => {
+    expect(context.getRedirectUrl(response(302, headers))).toBeNull();
+  });
+});
+
 describe("ruleIdFor", () => {
   const { context } = loadBackground();
 
@@ -186,12 +266,16 @@ describe("bounceRule", () => {
   });
 });
 
-describe("onBeforeRedirect listener", () => {
+describe("onHeadersReceived listener", () => {
   test("listens to top-level YouTube watch pages", () => {
     expect(loadBackground().filter).toEqual({
       urls: ["*://*.youtube.com/watch*"],
       types: ["main_frame"],
     });
+  });
+
+  test("asks for the response headers", () => {
+    expect(loadBackground().extraInfoSpec).toEqual(["responseHeaders"]);
   });
 
   test("adds a session rule when YouTube sends /watch to /shorts/", async () => {
@@ -204,6 +288,38 @@ describe("onBeforeRedirect listener", () => {
     expect(bg.updates).toEqual([
       { removeRuleIds: [rule.id], addRules: [rule] },
     ]);
+  });
+
+  // What YouTube sent the reporter of issue #27.
+  test("handles YouTube's 303 to an http:// Short", async () => {
+    const bg = loadBackground();
+    await bg.redirect(
+      "https://www.youtube.com/watch?v=zm7tGrK-bsk",
+      "http://www.youtube.com/shorts/zm7tGrK-bsk"
+    );
+    expect(bg.updates).toHaveLength(1);
+    expect(bg.updates[0].addRules).toEqual([
+      bg.context.bounceRule("zm7tGrK-bsk"),
+    ]);
+  });
+
+  test("handles a relative Location", async () => {
+    const bg = loadBackground();
+    await bg.redirect("https://m.youtube.com/watch?v=abc123", "/shorts/abc123");
+    expect(bg.updates).toHaveLength(1);
+    expect(bg.updates[0].addRules).toEqual([bg.context.bounceRule("abc123")]);
+  });
+
+  test("ignores responses that aren't redirects", async () => {
+    const bg = loadBackground();
+    await bg.respond(
+      response(200, [{ name: "content-type", value: "text/html" }])
+    );
+    await bg.respond(
+      response(200, [{ name: "location", value: "/shorts/abc123" }])
+    );
+    await bg.respond(response(200, undefined));
+    expect(bg.updates).toEqual([]);
   });
 
   test("replaces the rule if the bounce repeats before it applies", async () => {
