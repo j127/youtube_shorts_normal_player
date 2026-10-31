@@ -114,11 +114,31 @@ async function addBounceRule(videoId) {
   }
 }
 
+const REDIRECT_STATUS_CODES = new Set([301, 302, 303, 307, 308]);
+
 // Registered at the top level so the event can wake the background script.
-api.webRequest.onBeforeRedirect.addListener(
+// Inspect the response headers to detect YouTube's redirect before the
+// browser follows it.
+api.webRequest.onHeadersReceived.addListener(
   (details) => {
-    const videoId = getBouncedVideoId(details.url, details.redirectUrl);
+    if (!REDIRECT_STATUS_CODES.has(details.statusCode)) return;
+
+    const locationHeader = details.responseHeaders?.find(
+      (header) => header.name.toLowerCase() === "location"
+    );
+
+    if (!locationHeader?.value) return;
+
+    let redirectUrl;
+    try {
+      redirectUrl = new URL(locationHeader.value, details.url).href;
+    } catch {
+      return;
+    }
+
+    const videoId = getBouncedVideoId(details.url, redirectUrl);
     if (videoId) addBounceRule(videoId);
   },
-  { urls: ["*://*.youtube.com/watch*"], types: ["main_frame"] }
+  { urls: ["*://*.youtube.com/watch*"], types: ["main_frame"] },
+  ["responseHeaders"]
 );
