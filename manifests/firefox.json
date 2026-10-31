@@ -20,7 +20,10 @@
     "default_title": "YouTube Shorts Normal Player",
     "default_popup": "popup.html"
   },
-  "permissions": ["declarativeNetRequestWithHostAccess"],
+  "background": {
+    "scripts": ["background.js"]
+  },
+  "permissions": ["declarativeNetRequestWithHostAccess", "webRequest"],
   "host_permissions": ["*://*.youtube.com/*"],
   "declarative_net_request": {
     "rule_resources": [

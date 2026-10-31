@@ -15,6 +15,12 @@ The extension works in the background, so you don't need to pin it to the toolba
 
 If Shorts stop opening in the normal player, open the browser's Extensions menu (the puzzle-piece icon next to the address bar) and click YouTube Shorts Normal Player, or click its toolbar button if you pinned it. On Firefox for Android, it's under Extensions in the browser menu. The panel that opens shows whether the extension is allowed to run on YouTube and lets you turn that back on.
 
+## When YouTube won't allow the normal player
+
+For some signed-in accounts, YouTube sends every Short back to the Shorts player when it's opened in the normal player. It looks like something YouTube is testing on some accounts: the same Shorts open in the normal player when you're signed out or signed in with a different account. Redirecting again would only loop, so the extension lets the Short open in the Shorts player and shows a notice explaining why. Shorts in that tab then stay in the Shorts player, and a new tab tries the normal player again.
+
+There is no setting to change. If this happens to you, you can add your details to [issue #27](https://github.com/j127/youtube_shorts_normal_player/issues/27).
+
 ## Development
 
 Requirements:

@@ -86,6 +86,194 @@ function isRedirectLoop(videoId, now = Date.now()) {
   return false;
 }
 
+// Shorts player fallback. For some signed-in accounts YouTube sends /watch back to
+// /shorts/ on its server (issue #27). background.js catches that and lets the Short
+// load with FALLBACK_PARAM added, and the loop guard above catches a bounce that
+// happens inside the page. Either way the tab is marked, so later Shorts in it open
+// in the Shorts player without a reload, and a notice says why. The mark lasts for
+// the tab's session: a new tab tries the normal player again.
+// Must match FALLBACK_PARAM in background.js and the allow rule in rules.json.
+const FALLBACK_PARAM = "ysnp_fallback";
+const FALLBACK_KEY = "youtubeShortsNormalPlayer:fallback";
+const NOTICE_KEY = "youtubeShortsNormalPlayer:noticeShown";
+const NOTICE_ID = "youtube-shorts-normal-player-notice";
+const NOTICE_TIMEOUT_MS = 15000;
+const HELP_URL =
+  "https://github.com/j127/youtube_shorts_normal_player#when-youtube-wont-allow-the-normal-player";
+
+// In-memory copies, for when sessionStorage is blocked.
+let fallbackActive = false;
+let noticeShown = false;
+
+/**
+ * @param {string} key - A sessionStorage key.
+ * @returns {string|null} The stored value, or null if missing or storage is blocked.
+ */
+function readSession(key) {
+  try {
+    return window.sessionStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * @param {string} key - A sessionStorage key.
+ * @param {string} value - The value to store. Ignored if storage is blocked.
+ */
+function writeSession(key, value) {
+  try {
+    window.sessionStorage.setItem(key, value);
+  } catch {
+    // The in-memory copy still covers this page.
+  }
+}
+
+/**
+ * @returns {boolean} True if YouTube refused the normal player earlier in this tab.
+ */
+function isFallbackActive() {
+  return fallbackActive || readSession(FALLBACK_KEY) === "1";
+}
+
+/**
+ * Remember that YouTube refuses the normal player in this tab, and say so.
+ */
+function activateFallback() {
+  fallbackActive = true;
+  writeSession(FALLBACK_KEY, "1");
+  showFallbackNotice();
+}
+
+/**
+ * Remove FALLBACK_PARAM from the address bar, so a copied link doesn't carry it.
+ * @returns {boolean} True if the page is a Short that background.js let through.
+ */
+function takeFallbackParam() {
+  const url = new URL(window.location.href);
+  if (
+    !getShortsVideoId(url.pathname) ||
+    !url.searchParams.has(FALLBACK_PARAM)
+  ) {
+    return false;
+  }
+  url.searchParams.delete(FALLBACK_PARAM);
+  try {
+    // A page that was just redirected here has no history state yet.
+    window.history.replaceState(null, "", url.href);
+  } catch {
+    // The parameter stays in the address bar, which is harmless.
+  }
+  return true;
+}
+
+/**
+ * Show the notice once per tab session. It waits for <body>, because this
+ * script runs before the page is parsed.
+ */
+function showFallbackNotice() {
+  if (noticeShown || readSession(NOTICE_KEY) === "1") return;
+  noticeShown = true;
+  writeSession(NOTICE_KEY, "1");
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", renderFallbackNotice, {
+      once: true,
+    });
+  } else {
+    renderFallbackNotice();
+  }
+}
+
+const NOTICE_CSS = `
+  .notice {
+    position: fixed;
+    left: 50%;
+    bottom: 24px;
+    transform: translateX(-50%);
+    z-index: 2147483647;
+    box-sizing: border-box;
+    width: max-content;
+    max-width: min(440px, calc(100vw - 32px));
+    padding: 12px 40px 12px 16px;
+    border-radius: 12px;
+    background: #212121;
+    color: #fff;
+    box-shadow: 0 4px 16px rgb(0 0 0 / 0.4);
+    font: 14px/1.4 Roboto, Arial, sans-serif;
+  }
+  @media (max-width: 600px) {
+    /* Clear m.youtube.com's bottom navigation bar. */
+    .notice { bottom: 72px; }
+  }
+  p { margin: 0 0 6px; }
+  strong { font-weight: 500; }
+  a { color: #3ea6ff; }
+  button {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: inherit;
+    font: 20px/28px Arial, sans-serif;
+    cursor: pointer;
+  }
+  button:hover { background: rgb(255 255 255 / 0.15); }
+`;
+
+/**
+ * Add the notice to the page. It lives in a shadow root so YouTube's styles
+ * don't reach it, and it closes itself after NOTICE_TIMEOUT_MS.
+ */
+function renderFallbackNotice() {
+  if (document.getElementById(NOTICE_ID)) return;
+
+  const host = document.createElement("div");
+  host.id = NOTICE_ID;
+  const root = host.attachShadow({ mode: "open" });
+
+  const style = document.createElement("style");
+  style.textContent = NOTICE_CSS;
+
+  const box = document.createElement("div");
+  box.className = "notice";
+  box.setAttribute("role", "status");
+
+  const title = document.createElement("p");
+  const strong = document.createElement("strong");
+  strong.textContent = "YouTube Shorts Normal Player";
+  title.append(strong);
+
+  const message = document.createElement("p");
+  message.textContent =
+    "YouTube keeps sending this Short back to the Shorts player for the account " +
+    "you're signed in with, so it can't open in the normal player. YouTube seems " +
+    "to be testing this on some accounts. Signed out, Shorts still open in the " +
+    "normal player.";
+
+  const link = document.createElement("a");
+  link.href = HELP_URL;
+  link.target = "_blank";
+  link.rel = "noopener";
+  link.textContent = "Learn more";
+
+  const close = document.createElement("button");
+  close.type = "button";
+  close.setAttribute("aria-label", "Close");
+  close.textContent = "×";
+  close.addEventListener("click", () => host.remove());
+
+  box.append(title, message, link, close);
+  root.append(style, box);
+  (document.body ?? document.documentElement).append(host);
+  setTimeout(() => host.remove(), NOTICE_TIMEOUT_MS);
+}
+
 // The last URL handleRedirect decided on. One navigation can trigger several
 // checks (and the MutationObserver fires many times), so each target is handled once.
 let lastTarget = null;
@@ -100,7 +288,16 @@ function handleRedirect(target) {
   if (!watchUrl || watchUrl.href === lastTarget) return;
   lastTarget = watchUrl.href;
 
-  if (isRedirectLoop(watchUrl.searchParams.get("v"))) return;
+  // YouTube sends this tab's Shorts back to the Shorts player, so redirecting
+  // would only reload the page.
+  if (isFallbackActive()) {
+    showFallbackNotice();
+    return;
+  }
+  if (isRedirectLoop(watchUrl.searchParams.get("v"))) {
+    activateFallback();
+    return;
+  }
   window.location.replace(watchUrl.href);
 }
 
@@ -150,6 +347,10 @@ function rewriteShortsLinks(root) {
     root.querySelectorAll('a[href*="/shorts/"]').forEach(rewriteAnchor);
   }
 }
+
+// 0. A Short that background.js let through because YouTube refused the normal
+// player for it.
+if (takeFallbackParam()) activateFallback();
 
 // 1. Fallback redirect (runs as soon as the script is injected).
 handleRedirect(window.location.href);

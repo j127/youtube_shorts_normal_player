@@ -9,7 +9,8 @@ const read = (name) =>
 const FIREFOX = read("firefox");
 const CHROME = read("chrome");
 
-// Everything except browser_specific_settings must match between browsers.
+// Everything except browser_specific_settings and background must match between
+// browsers.
 const SHARED_KEYS = [
   "manifest_version",
   "name",
@@ -41,10 +42,19 @@ describe("manifests", () => {
       CHROME.action.default_popup,
       ...CHROME.declarative_net_request.rule_resources.map((r) => r.path),
       ...CHROME.content_scripts.flatMap((c) => c.js),
+      CHROME.background.service_worker,
+      ...FIREFOX.background.scripts,
     ];
     for (const file of files) {
       expect(existsSync(join(ROOT, "src", file))).toBe(true);
     }
+  });
+
+  test("load the same background script the way each browser needs", () => {
+    // Firefox runs MV3 background scripts as an event page; Chrome needs a
+    // service worker.
+    expect(FIREFOX.background).toEqual({ scripts: ["background.js"] });
+    expect(CHROME.background).toEqual({ service_worker: "background.js" });
   });
 
   test("Firefox declares desktop and Android support", () => {
