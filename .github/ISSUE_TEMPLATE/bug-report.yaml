@@ -49,6 +49,15 @@ body:
         - Other
     validations:
       required: true
+  - type: dropdown
+    id: signed-out
+    attributes:
+      label: Does it still happen when you're signed out of YouTube?
+      description: "YouTube sends Shorts back to the Shorts player for some signed-in accounts ([issue #27](https://github.com/j127/youtube_shorts_normal_player/issues/27)), and this tells that apart from a bug in the extension. To check, sign out of YouTube (click your profile picture, then **Sign out**), open a new tab, and paste in a link to a different Short. A private window works too, but only if you've allowed the extension there, because extensions are off in private windows by default."
+      options:
+        - No, only when I'm signed in
+        - Yes, signed out too
+        - Didn't try
   - type: textarea
     id: steps
     attributes:
@@ -82,4 +91,4 @@ body:
     id: other
     attributes:
       label: Anything else?
-      description: For example, other extensions that change YouTube (ad blockers, SponsorBlock, etc.), or whether you were signed in to YouTube.
+      description: For example, other extensions that change YouTube (ad blockers, SponsorBlock, etc.).
