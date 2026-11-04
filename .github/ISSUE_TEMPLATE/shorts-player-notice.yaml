@@ -11,11 +11,21 @@ body:
         Thanks for reporting this! YouTube seems to be sending Shorts back to the Shorts player for some signed-in accounts, so the extension can't open them in the normal player. Each report helps show how many people this affects.
 
         Every question is optional, and the extension has filled in what it could, so you can submit the form as it is. Background is in [issue #27](https://github.com/j127/youtube_shorts_normal_player/issues/27).
+
+        ### How to check whether it's your account
+
+        The first two questions show whether YouTube is doing this to your account or something else is going on. After the notice, the extension keeps that tab, and that Short in every tab, in the Shorts player until you restart the browser. So test in a new tab with a different Short:
+
+        1. Sign out of YouTube: click your profile picture, then **Sign out**. This signs you out of Google in this browser too, so sign back in when you're done.
+        2. Open a new tab and paste in a link to a different Short.
+        3. Note which player it opens in. To check a different Google account, sign in with it and do the same with another Short.
+
+        A private window works instead of signing out, but extensions are off in private windows by default. To allow this one: in Firefox, open `about:addons`, click the extension, and set **Run in Private Windows** to **Allow**. In Chrome, Brave, or Edge, open `chrome://extensions`, click **Details** under the extension, and turn on the setting that allows it in Incognito (or private) windows.
   - type: dropdown
     id: signed-out
     attributes:
       label: Do Shorts open in the normal player when you're signed out of YouTube?
-      description: For example, in a private window.
+      description: See **How to check** above. Use a new tab and a different Short.
       options:
         - "Yes"
         - "No"
@@ -24,6 +34,7 @@ body:
     id: other-account
     attributes:
       label: Do Shorts open in the normal player with a different Google account?
+      description: See **How to check** above. Use a new tab and a different Short.
       options:
         - "Yes"
         - "No, it happens with all my accounts"
